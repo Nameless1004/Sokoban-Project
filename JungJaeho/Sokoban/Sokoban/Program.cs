@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 namespace JJH_SOKOBAN
 {
     enum Direction
@@ -36,7 +37,7 @@ namespace JJH_SOKOBAN
             const int MAP_MAX_Y = 20;
             #endregion
 
-            #region Player
+            #region 플레이어 세팅
             Direction playerDir = Direction.None;
             const ConsoleColor PLAYER_COLOR = ConsoleColor.DarkCyan;
             const int INITIAL_PLAYER_X = 2;
@@ -48,7 +49,7 @@ namespace JJH_SOKOBAN
             int prevPlayerY = 0;
             #endregion
 
-            #region Box
+            #region 박스 세팅
             const ConsoleColor BOX_COLOR = ConsoleColor.DarkYellow;
             const int INITIAL_BOX_X = 5;
             const int INITIAL_BOX_Y = 3;
@@ -58,23 +59,28 @@ namespace JJH_SOKOBAN
             int[] boxPosX = { INITIAL_BOX_X, INITIAL_BOX_X + 3, INITIAL_BOX_X + 5 };
             int[] boxPosY = { INITIAL_BOX_Y, INITIAL_BOX_Y + 3, INITIAL_BOX_Y + 4 };
             #endregion
-
-            #region Wall
+            
+            #region 벽 세팅
             int[] WallPosX = { 7, 9, 10 };
             int[] WallPosY = { 10, 17, 4 };
             #endregion
 
-            #region Goal
+            #region 골 세팅
             const ConsoleColor GOAL_COLOR = ConsoleColor.White;
             int[] GoalPosX = { 15, 20, 8 };
             int[] GoalPosY = { 3, 10, 7 };
             const char GOAL_ICON = '◎'; //▥ Д
             #endregion
 
+            Stopwatch stopwatch = new Stopwatch();
+            
             bool isGameOver = false;
+            int playerMoveCount = 0;
             int GoalInCount = 0;
 
             #region 게임 루프
+            stopwatch.Start();
+
             while (true)
             {
                 Console.Clear();
@@ -124,11 +130,21 @@ namespace JJH_SOKOBAN
 
                 // 골 UI
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.SetCursorPosition(MAP_MAX_X+3, 0);
+                Console.SetCursorPosition(MAP_MAX_X + 3, 0);
                 Console.Write($"-------------------------");
                 Console.SetCursorPosition(MAP_MAX_X + 3, 1);
                 Console.Write($"|     Goal {GoalInCount:D2} / {GoalPosX.Length:D2}      |");
                 Console.SetCursorPosition(MAP_MAX_X + 3, 2);
+                Console.Write($"-------------------------");
+                Console.SetCursorPosition(MAP_MAX_X + 3, 3);
+                Console.Write($"-------------------------");
+                Console.SetCursorPosition(MAP_MAX_X + 3, 4);
+                Console.Write($"|       {stopwatch.Elapsed.Minutes:D2}분 {stopwatch.Elapsed.Seconds:D2}초       |");
+                Console.SetCursorPosition(MAP_MAX_X + 3, 5);
+                Console.Write($"-------------------------");
+                Console.SetCursorPosition(MAP_MAX_X + 3, 6);
+                Console.Write($"|    이동 횟수 : {playerMoveCount:D3}    |");
+                Console.SetCursorPosition(MAP_MAX_X + 3, 7);
                 Console.Write($"-------------------------");
                 //
 
@@ -136,30 +152,36 @@ namespace JJH_SOKOBAN
                 // 게임 오버 처리
                 if (isGameOver)
                 {
-                    Thread.Sleep(1000);
-                    Console.Clear();
-                    Console.WriteLine("Game Over!");
                     break;
                 }
                 #endregion
 
                 #region ProcessInput
                 /*------------------- ProcessInput ------------------- */
-                ConsoleKey key = Console.ReadKey().Key;
-                switch (key)
+
+                // 키 입력이 있을때만 
+                if (Console.KeyAvailable)
                 {
-                    case ConsoleKey.RightArrow:
-                        playerDir = Direction.Right;
-                        break;
-                    case ConsoleKey.LeftArrow:
-                        playerDir = Direction.Left;
-                        break;
-                    case ConsoleKey.UpArrow:
-                        playerDir = Direction.Up;
-                        break;
-                    case ConsoleKey.DownArrow:
-                        playerDir = Direction.Down;
-                        break;
+                    ConsoleKey key = Console.ReadKey().Key;
+                    switch (key)
+                    {
+                        case ConsoleKey.RightArrow:
+                            playerDir = Direction.Right;
+                            playerMoveCount++;
+                            break;
+                        case ConsoleKey.LeftArrow:
+                            playerDir = Direction.Left;
+                            playerMoveCount++;
+                            break;
+                        case ConsoleKey.UpArrow:
+                            playerDir = Direction.Up;
+                            playerMoveCount++;
+                            break;
+                        case ConsoleKey.DownArrow:
+                            playerDir = Direction.Down;
+                            playerMoveCount++;
+                            break;
+                    }
                 }
                 #endregion
 
@@ -186,6 +208,8 @@ namespace JJH_SOKOBAN
                         playerY = Math.Min(playerY + 1, MAP_MAX_Y - WallOffset);
                         break;
                 }
+                // 움직임 처리해주고 방향 초기화
+                playerDir = Direction.None;
 
                 for (int i = 0; i < WallPosX.Length; ++i)
                 {
@@ -258,8 +282,23 @@ namespace JJH_SOKOBAN
                     isGameOver = true;
                 }
                 #endregion
-
+                // 깜빡임 방지
+                Thread.Sleep(1);
             }
+
+            // 게임 끝난 후 처리
+
+            // 스톱워치 종료
+            stopwatch.Stop();
+            // 화면 잠깐 멈춤
+            Thread.Sleep(1000);
+            Console.Clear();
+            Console.WriteLine("-------------------------------");
+            Console.WriteLine("          Game Over!");
+            Console.WriteLine("-------------------------------");
+            Console.WriteLine($"버틴 시간 : {stopwatch.Elapsed.TotalSeconds:F2}초");
+            Console.WriteLine($"이동 횟수 : {playerMoveCount}번");
+            Console.WriteLine("-------------------------------");
 
         }
     }
