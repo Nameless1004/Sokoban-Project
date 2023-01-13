@@ -10,8 +10,9 @@ namespace Sokoban
     {
         public int X;
         public int Y;
-        public Direction MoveDirection;
         public int PushedBoxIndex;
+        public Direction MoveDirection;
+        public ConsoleColor Color;
     }
 
     //    class Player : GameObject

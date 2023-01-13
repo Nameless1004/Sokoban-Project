@@ -12,6 +12,7 @@ namespace Sokoban
         public int X;
         public int Y;
         public bool IsOnGoal;
+        public ConsoleColor Color;
     }
 
     //class Box

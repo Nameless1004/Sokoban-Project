@@ -1,4 +1,5 @@
-﻿using System.Reflection.Metadata.Ecma335;
+﻿using System.Drawing;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Sokoban
 {
@@ -21,7 +22,7 @@ namespace Sokoban
             Console.ResetColor(); // 컬러를 초기화 하는 것
             Console.CursorVisible = false; // 커서를 숨기기
             Console.Title = "홍성재의 파이어펀치"; // 타이틀을 설정한다.
-            Console.BackgroundColor = ConsoleColor.DarkGreen; // 배경색을 설정한다.
+            Console.BackgroundColor = ConsoleColor.White; // 배경색을 설정한다.
             Console.ForegroundColor = ConsoleColor.Yellow; // 글꼴색을 설정한다.
             Console.Clear(); // 출력된 내용을 지운다.
 
@@ -34,28 +35,32 @@ namespace Sokoban
             const int MIN_Y = 0;
             const int MAX_X = 20;
             const int MAX_Y = 15;
+            const int OFFSET_X = 1;
+            const int OFFSET_Y = 1;
+            const int RECORD_COUNT = 200;
 
             // 플레이어 위치를 저장하기 위한 변수
             // int player.X = 0;
             // int player.Y = 0;
             // Direction player.MoveDirection = Direction.None;
             // int pushedBoxIndex = 0;
-            Recorder recorder = new Recorder(5, BOX_COUNT);
+            Recorder recorder = new Recorder(RECORD_COUNT);
             Renderer renderer = new Renderer();
             Player player = new Player
             {
-                X = 0,
-                Y = 0,
+                X = 2,
+                Y = 2,
                 MoveDirection = Direction.None,
-                PushedBoxIndex = 0
+                PushedBoxIndex = 0,
+                Color = ConsoleColor.Green,
             };
 
             // 박스 위치를 저장하기 위한 변수
             Box[] boxes = new Box[3]
             {
-                new Box{ X= 1, Y = 0, IsOnGoal = false},
-                new Box{ X= 7, Y = 4, IsOnGoal = false},
-                new Box{ X= 4, Y = 4, IsOnGoal = false}
+                new Box{ X= 3, Y = 5, IsOnGoal = false, Color = ConsoleColor.DarkCyan},
+                new Box{ X= 7, Y = 4, IsOnGoal = false, Color = ConsoleColor.DarkCyan},
+                new Box{ X= 4, Y = 4, IsOnGoal = false, Color = ConsoleColor.DarkCyan}
             };
 
             // 박스가 골 위에 있는지를 저장하기 위한 변수
@@ -64,40 +69,51 @@ namespace Sokoban
             // 벽 위치를 저장하기 위한 변수
             Wall[] walls = new Wall[WALL_COUNT]
             {
-                new Wall{X =7, Y = 7},
-                new Wall{X =8, Y = 5}
+                new Wall{X =7, Y = 7, Color = ConsoleColor.Red},
+                new Wall{X =8, Y = 5, Color = ConsoleColor.Red}
             };
 
             Goal[] goals = new Goal[GOAL_COUNT]
             {
-                new Goal{X = 9, Y = 9},
-                new Goal{X = 1, Y = 2},
-                new Goal{X = 3, Y = 3}
+                new Goal{X = 9, Y = 9, Color = ConsoleColor.Black},
+                new Goal{X = 5, Y = 6, Color = ConsoleColor.Black},
+                new Goal{X = 3, Y = 3, Color = ConsoleColor.Black}
             };
-            bool isRollBack = false;
+
+            bool isRollBacking = false;
             ConsoleKey key = ConsoleKey.NoName;
             // 게임 루프 구성
             while (true)
             {
                 Render();
 
-                if(!isRollBack)
+                // 롤백중일때 키 입력을 받지 않는다.
+                if (!isRollBacking)
+                {
                     key = Console.ReadKey().Key;
+                }
 
                 if (key == ConsoleKey.Spacebar)
                 {
-                    //recorder.RollBack(ref player, ref boxes);
-                    // continuel
-                    isRollBack = true;
+                    if (!isRollBacking)
+                    {
+                        isRollBacking = true;
+                    }
                 }
-                if (isRollBack == true && recorder.RollBackOneTime(ref player, ref boxes) == true)
+
+                if (isRollBacking == true && recorder.UndoAll(ref player, ref boxes) == true)
                 {
-                    Thread.Sleep(500);
+                    Thread.Sleep(100);
                     continue;
                 }
-                else isRollBack = false;
-                if (isRollBack == true) { continue; }
+                else
+                {
+                    isRollBacking = false;
+                }
+
+                // player, boxes 기록
                 recorder.Record(player, boxes);
+
                 Update(key);
                 // 박스와 골의 처리
                 int boxOnGoalCount = 0;
@@ -141,27 +157,49 @@ namespace Sokoban
                 // 이전 프레임을 지운다.
                 Console.Clear();
 
-                // 플레이어를 그린다.
+                // 테투리를 그려준다.
+                for(int i = 0; i < MAX_Y; ++i)
+                {
+                    renderer.Render(i, MIN_X, "ㅁ");
+                    renderer.Render(i, MAX_X, "ㅁ");
+                }
+                for (int i = 0; i < MAX_X; ++i)
+                {
+                    renderer.Render(MIN_Y, i, "ㅁ");
+                    renderer.Render(MAX_Y, i, "ㅁ");
+                }
 
-                renderer.Render(player.X, player.Y, "P");
+                recorder.TrackingPlayer();
                 // 골을 그린다.
                 for (int i = 0; i < GOAL_COUNT; ++i)
                 {
-                    renderer.Render(goals[i].X, goals[i].Y, "G");
+                    renderer.Render(goals[i].X, goals[i].Y, "G", goals[i].Color);
                 }
+                // 플레이어를 그린다
+                if (player.X - 1 >= MIN_X + OFFSET_X)
+                renderer.Render(player.X-1, player.Y, "ε", player.Color);
+
+                renderer.Render(player.X, player.Y, "ё", player.Color);
+
+                if (player.X + 1 <= MAX_X - OFFSET_Y)
+                    renderer.Render(player.X + 1, player.Y, "з", player.Color);
+
+
 
                 // 박스를 그린다.
                 for (int boxId = 0; boxId < BOX_COUNT; ++boxId)
                 {
                     string boxShape = isBoxOnGoal[boxId] ? "O" : "B";
-                    renderer.Render(boxes[boxId].X, boxes[boxId].Y, boxShape);
+                    renderer.Render(boxes[boxId].X, boxes[boxId].Y, boxShape, boxes[boxId].Color);
                 }
 
                 // 벽을 그린다.
                 for (int wallId = 0; wallId < WALL_COUNT; ++wallId)
                 {
-                    renderer.Render(walls[wallId].X, walls[wallId].Y, "W");
+                    renderer.Render(walls[wallId].X, walls[wallId].Y, "W", walls[wallId].Color);
                 }
+
+
             }
 
             void Update(ConsoleKey key)
@@ -213,19 +251,19 @@ namespace Sokoban
                     switch (player.MoveDirection)
                     {
                         case Direction.Left:
-                            boxes[i].X = Math.Clamp(boxes[i].X - 1, MIN_X, MAX_X);
+                            boxes[i].X = Math.Clamp(boxes[i].X - 1, MIN_X + OFFSET_X, MAX_X - OFFSET_X);
                             player.X = boxes[i].X + 1;
                             break;
                         case Direction.Right:
-                            boxes[i].X = Math.Clamp(boxes[i].X + 1, MIN_X, MAX_X);
+                            boxes[i].X = Math.Clamp(boxes[i].X + 1, MIN_X + OFFSET_X, MAX_X - OFFSET_X);
                             player.X = boxes[i].X - 1;
                             break;
                         case Direction.Up:
-                            boxes[i].Y = Math.Clamp(boxes[i].Y - 1, MIN_Y, MAX_Y);
+                            boxes[i].Y = Math.Clamp(boxes[i].Y - 1, MIN_Y + OFFSET_Y, MAX_Y - OFFSET_Y);
                             player.Y = boxes[i].Y + 1;
                             break;
                         case Direction.Down:
-                            boxes[i].Y = Math.Clamp(boxes[i].Y + 1, MIN_Y, MAX_Y);
+                            boxes[i].Y = Math.Clamp(boxes[i].Y + 1, MIN_Y + OFFSET_Y, MAX_Y - OFFSET_Y);
                             player.Y = boxes[i].Y - 1;
                             break;
                         default:
@@ -328,25 +366,25 @@ namespace Sokoban
             {
                 if (key == ConsoleKey.LeftArrow)
                 {
-                    player.X = Math.Max(MIN_X, player.X - 1);
+                    player.X = Math.Max(MIN_X + OFFSET_X, player.X - 1);
                     player.MoveDirection = Direction.Left;
                 }
 
                 if (key == ConsoleKey.RightArrow)
                 {
-                    player.X = Math.Min(player.X + 1, MAX_X);
+                    player.X = Math.Min(player.X + 1, MAX_X - OFFSET_X);
                     player.MoveDirection = Direction.Right;
                 }
 
                 if (key == ConsoleKey.UpArrow)
                 {
-                    player.Y = Math.Max(MIN_Y, player.Y - 1);
+                    player.Y = Math.Max(MIN_Y + OFFSET_Y, player.Y - 1);
                     player.MoveDirection = Direction.Up;
                 }
 
                 if (key == ConsoleKey.DownArrow)
                 {
-                    player.Y = Math.Min(player.Y + 1, MAX_Y);
+                    player.Y = Math.Min(player.Y + 1, MAX_Y - OFFSET_Y);
                     player.MoveDirection = Direction.Down;
                 }
             }

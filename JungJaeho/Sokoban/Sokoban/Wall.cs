@@ -10,6 +10,7 @@ namespace Sokoban
     {
         public int X;
         public int Y;
+        public ConsoleColor Color;
     }
 
     //class Wall

@@ -8,10 +8,13 @@ namespace Sokoban
 {
     class Renderer
     {
-        public void Render(int x, int y, string icon)
+        public void Render(int x, int y, string icon, ConsoleColor color = ConsoleColor.Black)
         {
+            ConsoleColor prev = Console.ForegroundColor;
+            Console.ForegroundColor = color;
             Console.SetCursorPosition(x, y);
             Console.Write(icon);
+            Console.ForegroundColor = prev;
         }
     }
 }
