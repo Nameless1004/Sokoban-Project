@@ -5,8 +5,6 @@ VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sokoban", "Sokoban\Sokoban.csproj", "{9A8D238B-06C4-437C-9E04-C83CA36241A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileIO", "FileIO\FileIO.csproj", "{163E9781-E656-4CEC-8B7E-0AE98D65F1A9}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{9A8D238B-06C4-437C-9E04-C83CA36241A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A8D238B-06C4-437C-9E04-C83CA36241A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A8D238B-06C4-437C-9E04-C83CA36241A5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{163E9781-E656-4CEC-8B7E-0AE98D65F1A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{163E9781-E656-4CEC-8B7E-0AE98D65F1A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{163E9781-E656-4CEC-8B7E-0AE98D65F1A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{163E9781-E656-4CEC-8B7E-0AE98D65F1A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
