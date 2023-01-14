@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.Reflection.Metadata.Ecma335;
+using System.Text;
 
 namespace Sokoban
 {
@@ -17,7 +18,6 @@ namespace Sokoban
     {
         static void Main()
         {
-
             // 초기 세팅
             Console.ResetColor(); // 컬러를 초기화 하는 것
             Console.CursorVisible = false; // 커서를 숨기기
@@ -32,27 +32,26 @@ namespace Sokoban
             const int WALL_COUNT = 2;
 
             const int MIN_X = 0;
-            const int MIN_Y = 0;
-            const int MAX_X = 20;
-            const int MAX_Y = 15;
+            const int MIN_Y = 2;
+            const int MAX_X = 26;
+            const int MAX_Y = 13;
             const int OFFSET_X = 1;
             const int OFFSET_Y = 1;
-            const int RECORD_COUNT = 200;
 
-            // 플레이어 위치를 저장하기 위한 변수
-            // int player.X = 0;
-            // int player.Y = 0;
-            // Direction player.MoveDirection = Direction.None;
-            // int pushedBoxIndex = 0;
-            Recorder recorder = new Recorder(RECORD_COUNT);
+            // Recorder Setting
+            const int RECORD_COUNT = 10;
+            const int REWIND_INTERVAL = 100;
+
+            Recorder recorder = new Recorder(RECORD_COUNT, REWIND_INTERVAL);
             Renderer renderer = new Renderer();
+            
             Player player = new Player
             {
                 X = 2,
-                Y = 2,
-                MoveDirection = Direction.None,
+                Y = 3,
                 PushedBoxIndex = 0,
-                Color = ConsoleColor.Green,
+                MoveDirection = Direction.None,
+                Color = ConsoleColor.DarkRed,
             };
 
             // 박스 위치를 저장하기 위한 변수
@@ -80,36 +79,35 @@ namespace Sokoban
                 new Goal{X = 3, Y = 3, Color = ConsoleColor.Black}
             };
 
-            bool isRollBacking = false;
+
             ConsoleKey key = ConsoleKey.NoName;
             // 게임 루프 구성
             while (true)
             {
                 Render();
-
-                // 롤백중일때 키 입력을 받지 않는다.
-                if (!isRollBacking)
+               
+                    // 되감기상태가 아닐 때만 키입력 받음
+                if (recorder.IsRewinding == false)
                 {
                     key = Console.ReadKey().Key;
                 }
 
-                if (key == ConsoleKey.Spacebar)
-                {
-                    if (!isRollBacking)
-                    {
-                        isRollBacking = true;
-                    }
-                }
+                recorder.Update(key, ref player,ref boxes);
 
-                if (isRollBacking == true && recorder.UndoAll(ref player, ref boxes) == true)
-                {
-                    Thread.Sleep(100);
+                if (recorder.IsRewinding == true)
                     continue;
-                }
-                else
-                {
-                    isRollBacking = false;
-                }
+
+                //if (key == ConsoleKey.Spacebar)
+                //{
+                //    recorder.IsRewinding = true;
+                //}
+
+                //if (recorder.IsRewinding == true)
+                //{
+                //    recorder.Rewind(ref player, ref boxes);
+                //    Thread.Sleep(recorder.RewindInterval);
+                //    continue;
+                //}
 
                 // player, boxes 기록
                 recorder.Record(player, boxes);
@@ -158,26 +156,28 @@ namespace Sokoban
                 Console.Clear();
 
                 // 테투리를 그려준다.
-                for(int i = 0; i < MAX_Y; ++i)
+                for (int i = MIN_X; i <= MAX_X; ++i)
                 {
-                    renderer.Render(i, MIN_X, "ㅁ");
-                    renderer.Render(i, MAX_X, "ㅁ");
+                    renderer.Render(i, MIN_Y, "a");
+                    renderer.Render(i, MAX_Y, "a");
                 }
-                for (int i = 0; i < MAX_X; ++i)
+                for (int i = MIN_Y; i <= MAX_Y; ++i)
                 {
-                    renderer.Render(MIN_Y, i, "ㅁ");
-                    renderer.Render(MAX_Y, i, "ㅁ");
+                    renderer.Render(MIN_X, i, "a");
+                    renderer.Render(MAX_X, i, "a");
                 }
 
                 recorder.TrackingPlayer();
+                
                 // 골을 그린다.
                 for (int i = 0; i < GOAL_COUNT; ++i)
                 {
                     renderer.Render(goals[i].X, goals[i].Y, "G", goals[i].Color);
                 }
+
                 // 플레이어를 그린다
                 if (player.X - 1 >= MIN_X + OFFSET_X)
-                renderer.Render(player.X-1, player.Y, "ε", player.Color);
+                    renderer.Render(player.X - 1, player.Y, "ε", player.Color);
 
                 renderer.Render(player.X, player.Y, "ё", player.Color);
 
@@ -199,6 +199,21 @@ namespace Sokoban
                     renderer.Render(walls[wallId].X, walls[wallId].Y, "W", walls[wallId].Color);
                 }
 
+                if (recorder.IsRewinding)
+                {
+                    string ui = $"| Rewinding... : {recorder.Index:D2} |";
+                    int startPos = MAX_X / 2 - (ui.Length / 2);
+                    // 맵사이
+                    // 
+                    StringBuilder builder = new StringBuilder();
+                    for (int i = 0; i < ui.Length; ++i)
+                    {
+                        builder.Append("-");
+                    }
+
+                    renderer.Render(startPos, 0, ui);
+                    renderer.Render(startPos, 1, builder.ToString());
+                }
 
             }
 
