@@ -14,44 +14,45 @@ namespace Sokoban
     }
 
 
-    class Sokoban
+    public class Sokoban
     {
+        // 기호 상수 정의
+        public const int GOAL_COUNT = 3;
+        public const int BOX_COUNT = GOAL_COUNT;
+        public const int WALL_COUNT = 2;
+
+        public const int MIN_X = 0;
+        public const int MIN_Y = 2;
+        public const int MAX_X = 26;
+        public const int MAX_Y = 13;
+        public const int OFFSET_X = 1;
+        public const int OFFSET_Y = 1;
+
+        // Recorder Setting
+        public const int RECORD_COUNT = 5;
+        public const int REWIND_INTERVAL = 100;
+
         static void Main()
         {
             // 초기 세팅
             Console.ResetColor(); // 컬러를 초기화 하는 것
             Console.CursorVisible = false; // 커서를 숨기기
             Console.Title = "홍성재의 파이어펀치"; // 타이틀을 설정한다.
-            Console.BackgroundColor = ConsoleColor.White; // 배경색을 설정한다.
+            Console.BackgroundColor = ConsoleColor.Black; // 배경색을 설정한다.
             Console.ForegroundColor = ConsoleColor.Yellow; // 글꼴색을 설정한다.
             Console.Clear(); // 출력된 내용을 지운다.
 
-            // 기호 상수 정의
-            const int GOAL_COUNT = 3;
-            const int BOX_COUNT = GOAL_COUNT;
-            const int WALL_COUNT = 2;
-
-            const int MIN_X = 0;
-            const int MIN_Y = 2;
-            const int MAX_X = 26;
-            const int MAX_Y = 13;
-            const int OFFSET_X = 1;
-            const int OFFSET_Y = 1;
-
-            // Recorder Setting
-            const int RECORD_COUNT = 10;
-            const int REWIND_INTERVAL = 100;
 
             Recorder recorder = new Recorder(RECORD_COUNT, REWIND_INTERVAL);
             Renderer renderer = new Renderer();
-            
+            Teleporter tp = new Teleporter(new Vector2(5, 5), new Vector2(7, 9), "T");
             Player player = new Player
             {
                 X = 2,
                 Y = 3,
                 PushedBoxIndex = 0,
                 MoveDirection = Direction.None,
-                Color = ConsoleColor.DarkRed,
+                Color = ConsoleColor.Yellow,
             };
 
             // 박스 위치를 저장하기 위한 변수
@@ -69,14 +70,14 @@ namespace Sokoban
             Wall[] walls = new Wall[WALL_COUNT]
             {
                 new Wall{X =7, Y = 7, Color = ConsoleColor.Red},
-                new Wall{X =8, Y = 5, Color = ConsoleColor.Red}
+                new Wall{X =7, Y = 10, Color = ConsoleColor.Red}
             };
 
             Goal[] goals = new Goal[GOAL_COUNT]
             {
-                new Goal{X = 9, Y = 9, Color = ConsoleColor.Black},
-                new Goal{X = 5, Y = 6, Color = ConsoleColor.Black},
-                new Goal{X = 3, Y = 3, Color = ConsoleColor.Black}
+                new Goal{X = 9, Y = 9, Color = ConsoleColor.White},
+                new Goal{X = 5, Y = 6, Color = ConsoleColor.White},
+                new Goal{X = 3, Y = 3, Color = ConsoleColor.White}
             };
 
 
@@ -85,29 +86,17 @@ namespace Sokoban
             while (true)
             {
                 Render();
-               
-                    // 되감기상태가 아닐 때만 키입력 받음
+
+                // 되감기상태가 아닐 때만 키입력 받음
                 if (recorder.IsRewinding == false)
                 {
                     key = Console.ReadKey().Key;
                 }
 
-                recorder.Update(key, ref player,ref boxes);
+                recorder.Update(key, ref player, ref boxes);
 
                 if (recorder.IsRewinding == true)
                     continue;
-
-                //if (key == ConsoleKey.Spacebar)
-                //{
-                //    recorder.IsRewinding = true;
-                //}
-
-                //if (recorder.IsRewinding == true)
-                //{
-                //    recorder.Rewind(ref player, ref boxes);
-                //    Thread.Sleep(recorder.RewindInterval);
-                //    continue;
-                //}
 
                 // player, boxes 기록
                 recorder.Record(player, boxes);
@@ -155,31 +144,45 @@ namespace Sokoban
                 // 이전 프레임을 지운다.
                 Console.Clear();
 
-                // 테투리를 그려준다.
+                // 플레이어 이동경로
+                recorder.TrackingPlayer("ё");
+
+                // 플레이어 왼쪽날개
+                if (player.X - 1 >= MIN_X + OFFSET_X)
+                    renderer.Render(player.X - 1, player.Y, "ε", player.Color);
+                // 플레이어 오른쪽 날개
+                if (player.X - 1 >= MIN_X + OFFSET_X)
+                    renderer.Render(player.X - 1, player.Y, "ε", player.Color);
+
+                // 테두리를 그려준다.
                 for (int i = MIN_X; i <= MAX_X; ++i)
                 {
-                    renderer.Render(i, MIN_Y, "a");
-                    renderer.Render(i, MAX_Y, "a");
+                    Random rand = new Random();
+                    ConsoleColor col = recorder.IsRewinding ? (ConsoleColor)rand.Next(1, 15) : ConsoleColor.White;
+                    renderer.Render(i, MIN_Y, "■", col);
+                    renderer.Render(i, MAX_Y, "■", col);
                 }
                 for (int i = MIN_Y; i <= MAX_Y; ++i)
                 {
-                    renderer.Render(MIN_X, i, "a");
-                    renderer.Render(MAX_X, i, "a");
+                    Random rand = new Random();
+                    ConsoleColor col = recorder.IsRewinding ? (ConsoleColor)rand.Next(1, 15) : ConsoleColor.White;
+                    renderer.Render(MIN_X, i, "■",col);
+                    renderer.Render(MAX_X, i, "■", col);
                 }
 
-                recorder.TrackingPlayer();
-                
                 // 골을 그린다.
                 for (int i = 0; i < GOAL_COUNT; ++i)
                 {
                     renderer.Render(goals[i].X, goals[i].Y, "G", goals[i].Color);
                 }
 
-                // 플레이어를 그린다
-                if (player.X - 1 >= MIN_X + OFFSET_X)
-                    renderer.Render(player.X - 1, player.Y, "ε", player.Color);
+                // Teleport
+                renderer.Render(tp.Pos1.X, tp.Pos1.Y, tp.Icon, ConsoleColor.Blue);
+                renderer.Render(tp.Pos2.X, tp.Pos2.Y, tp.Icon, ConsoleColor.Blue);
 
+                // 플레이어 몸
                 renderer.Render(player.X, player.Y, "ё", player.Color);
+
 
                 if (player.X + 1 <= MAX_X - OFFSET_Y)
                     renderer.Render(player.X + 1, player.Y, "з", player.Color);
@@ -203,16 +206,13 @@ namespace Sokoban
                 {
                     string ui = $"| Rewinding... : {recorder.Index:D2} |";
                     int startPos = MAX_X / 2 - (ui.Length / 2);
-                    // 맵사이
-                    // 
                     StringBuilder builder = new StringBuilder();
                     for (int i = 0; i < ui.Length; ++i)
                     {
                         builder.Append("-");
                     }
-
-                    renderer.Render(startPos, 0, ui);
-                    renderer.Render(startPos, 1, builder.ToString());
+                    renderer.Render(startPos, 0, ui, ConsoleColor.White);
+                    renderer.Render(startPos, 1, builder.ToString(), ConsoleColor.White);
                 }
 
             }
@@ -374,7 +374,25 @@ namespace Sokoban
 
                     break;
                 }
+
+                tp.Update(ref player, in boxes, in walls);
+
+                for(int i = 0; i < BOX_COUNT; ++i)
+                {
+                    isBoxOnGoal[i] = false;
+                    for(int j = 0; j < GOAL_COUNT; ++j)
+                    {
+                        if(IsCollided(boxes[i].X, boxes[i].Y, goals[j].X, goals[j].Y))
+                        {
+                            isBoxOnGoal[i] = true;
+                            break;
+                        }
+                    }
+                }
+
             }
+            
+           
 
             // 플레이어를 이동시킨다.
             void MovePlayer(ConsoleKey key, ref Player player)

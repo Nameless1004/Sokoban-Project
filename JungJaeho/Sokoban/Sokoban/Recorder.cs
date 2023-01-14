@@ -108,14 +108,16 @@ namespace Sokoban
         /// <summary>
         /// Test함수입니다. 플레이어 이동한곳 표시
         /// </summary>
-        public void TrackingPlayer()
+        public void TrackingPlayer(string playerIcon)
         {
             ConsoleColor prev = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Gray;
+           
             for (int i = 0; i < _index; ++i)
             {
+                Console.ForegroundColor = (ConsoleColor)(1+i%14);
+                //Console.ForegroundColor = ConsoleColor.Gray;
                 Console.SetCursorPosition(_playerMoveHistory[i].X, _playerMoveHistory[i].Y);
-                Console.Write("◆");
+                Console.Write(playerIcon);
             }
             Console.ForegroundColor = prev;
         }
