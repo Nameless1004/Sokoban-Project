@@ -8,8 +8,12 @@ namespace Sokoban
 {
     struct Wall
     {
-        public int X;
-        public int Y;
+        public Wall(Vector2 pos, ConsoleColor color)
+        {
+            Pos = pos;
+            Color = color;
+        }
+        public Vector2 Pos;
         public ConsoleColor Color;
     }
 

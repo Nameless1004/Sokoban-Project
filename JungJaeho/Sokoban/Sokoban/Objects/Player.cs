@@ -8,8 +8,14 @@ namespace Sokoban
 {
     struct Player
     {
-        public int X;
-        public int Y;
+        public Player(Vector2 pos, int pushedBoxId, ConsoleColor color)
+        {
+            Pos = pos;
+            PushedBoxIndex= pushedBoxId;
+            MoveDirection = Direction.None;
+            Color = color;
+        }
+        public Vector2 Pos;
         public int PushedBoxIndex;
         public Direction MoveDirection;
         public ConsoleColor Color;

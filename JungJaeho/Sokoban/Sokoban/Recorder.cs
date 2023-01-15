@@ -10,6 +10,12 @@ namespace Sokoban
 {
     class Recorder
     {
+        struct PlayerInfo
+        {
+            Vector2 Pos;
+            Direction direction;
+            int PushedBoxIndex;
+        }
         /// <summary>
         /// 생성자
         /// </summary>
@@ -38,7 +44,6 @@ namespace Sokoban
         #endregion
 
         
-
         public void Update(ConsoleKey key, ref Player player, ref Box[] boxes)
         {
             if (key == ConsoleKey.Spacebar)
@@ -54,7 +59,7 @@ namespace Sokoban
         }
 
         /// <summary>
-        /// 한번씩 뒤로 되돌려주는 함수 입니다.
+        /// 되감기해주는 함수
         /// </summary>
         /// <param name="player">플레이어</param>
         /// <param name="boxes">박스들</param>
@@ -81,45 +86,62 @@ namespace Sokoban
         {
             if (_index < _recordCount)
             {
-                _playerMoveHistory[_index] = player;
-                _boxesMoveHistory[_index] = (Box[])boxes.Clone();
+                RecordPlayerMove(player, _index);
+                RecordBoxesMove(boxes, _index);
                 _index++;
             }
             else
             {
-                for (int i = 0; i < _recordCount-1; ++i)
-                {
-                    //Player
-                    Player temp = _playerMoveHistory[i];
-                    _playerMoveHistory[i] = _playerMoveHistory[i + 1];
-                    _playerMoveHistory[i + 1] = temp;
-
-                    // Box
-                    Box[] temp2 = (Box[])_boxesMoveHistory[i].Clone();
-                    _boxesMoveHistory[i] = (Box[])_boxesMoveHistory[i + 1].Clone();
-                    _boxesMoveHistory[i + 1] = (Box[])temp2.Clone();
-
-                }
-                _playerMoveHistory[_index - 1] = player;
-                _boxesMoveHistory[_index - 1] = (Box[])boxes.Clone();
+                //   Record Index
+                //    1 2 3
+                // => 2 3 4
+                // => 3 4 5
+                MoveForwardElements(player, boxes, _recordCount);
+                RecordPlayerMove(player, _index - 1);
+                RecordBoxesMove(boxes, _index - 1);
+                //_playerMoveHistory[_index - 1] = player;
+                //_boxesMoveHistory[_index - 1] = (Box[])boxes.Clone();
             }
         }
 
+        private void RecordPlayerMove(Player player, int index)
+        {
+            _playerMoveHistory[_index] = player;
+        }
+
+        private void RecordBoxesMove(Box[] boxes, int index)
+        {
+            _boxesMoveHistory[_index] = (Box[])boxes.Clone();
+        }
+
+        private void MoveForwardElements(Player player, Box[] boxes, int recordCount)
+        {
+            for (int i = 0; i < recordCount - 1; ++i)
+            {
+                //Player
+                Player temp = _playerMoveHistory[i];
+                _playerMoveHistory[i] = _playerMoveHistory[i + 1];
+                _playerMoveHistory[i + 1] = temp;
+
+                // Box
+                Box[] temp2 = (Box[])_boxesMoveHistory[i].Clone();
+                _boxesMoveHistory[i] = (Box[])_boxesMoveHistory[i + 1].Clone();
+                _boxesMoveHistory[i + 1] = (Box[])temp2.Clone();
+            }
+        }
         /// <summary>
         /// Test함수입니다. 플레이어 이동한곳 표시
         /// </summary>
-        public void TrackingPlayer(string playerIcon)
+        public void TrackingPlayer(Renderer renderer, string playerIcon)
         {
             ConsoleColor prev = Console.ForegroundColor;
            
             for (int i = 0; i < _index; ++i)
             {
-                Console.ForegroundColor = (ConsoleColor)(1+i%14);
+                ConsoleColor color = (ConsoleColor)(1+i%14);
                 //Console.ForegroundColor = ConsoleColor.Gray;
-                Console.SetCursorPosition(_playerMoveHistory[i].X, _playerMoveHistory[i].Y);
-                Console.Write(playerIcon);
+                renderer.Render(_playerMoveHistory[i].Pos, playerIcon, color);
             }
-            Console.ForegroundColor = prev;
         }
     }
 }

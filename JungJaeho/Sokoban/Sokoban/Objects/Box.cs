@@ -9,8 +9,13 @@ namespace Sokoban
 {
     struct Box
     {
-        public int X;
-        public int Y;
+        public Box(Vector2 pos, ConsoleColor color)
+        {
+            Pos = pos;
+            IsOnGoal= false;
+            Color = color;
+        }
+        public Vector2 Pos;
         public bool IsOnGoal;
         public ConsoleColor Color;
     }
