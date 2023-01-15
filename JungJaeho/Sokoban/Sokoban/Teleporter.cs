@@ -9,16 +9,19 @@ namespace Sokoban
 {
     struct Teleporter
     {
-        public Teleporter(Vector2 p1, Vector2 p2, string icon)
+        public Teleporter(Vector2 p1, Vector2 p2, string icon, ConsoleColor color)
         {
             Pos1 = p1;
             Pos2 = p2;
             Icon = icon;
+            Color = color;
         }
 
+        
         public Vector2 Pos1;
         public Vector2 Pos2;
         public string Icon;
+        public ConsoleColor Color;
 
         public void Update(ref Player player, in Box[] boxes, in Wall[] walls)
         {
@@ -43,10 +46,9 @@ namespace Sokoban
         private void TeleportBox(ref Player player, ref Box pushedBox, in Box[] boxes, in Wall[] walls)
         {
             // 박스 텔포
-            if (pushedBox.Pos.X == Pos1.X && pushedBox.Pos.Y ==  Pos1.Y)
+            if (pushedBox.Pos == Pos1)
             {
-                int prevBoxPosX = pushedBox.Pos.X;
-                int prevBoxPosY = pushedBox.Pos.Y;
+                Vector prevBoxPosX = pushedBox.Pos.X;
 
                 if (false == IsTeleportable(Pos2, player.MoveDirection, boxes, walls))
                 {
@@ -178,7 +180,7 @@ namespace Sokoban
             Vector2 left =   new Vector2(Pos.X - 1, Pos.Y);
             Vector2 top =    new Vector2(Pos.X, Pos.Y - 1);
             Vector2 bottom = new Vector2(Pos.X, Pos.Y + 1);
-            if (left.X <= Sokoban.MIN_X + Sokoban.OFFSET_X || Sokoban.MAX_X - Sokoban.OFFSET_X <= right.X || top.Y <= Sokoban.MIN_Y + Sokoban.OFFSET_Y || Sokoban.MAX_Y - Sokoban.OFFSET_Y <= bottom.Y)
+            if (left.X <= Game.MIN_X + Game.OFFSET_X || Game.MAX_X - Game.OFFSET_X <= right.X || top.Y <= Game.MIN_Y + Game.OFFSET_Y || Game.MAX_Y - Game.OFFSET_Y <= bottom.Y)
                 return false;
             switch (moveDirection)
             {

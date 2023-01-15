@@ -11,8 +11,7 @@ namespace Sokoban
         public Vector2(int x, int y) { X = x; Y = y; }
         public int X;
         public int Y;
-
-
+   
         #region Operator Overloading
         public static Vector2 operator +(Vector2 x1, Vector2 x2)
         {

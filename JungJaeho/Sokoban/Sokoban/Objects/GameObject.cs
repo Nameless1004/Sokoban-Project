@@ -8,8 +8,7 @@ namespace Sokoban
 {
     class GameObject
     {
-        protected int _x;
-        protected int _y;
+        protected Vector2 _pos;
         protected string _tag;
         protected string _icon;
     }
