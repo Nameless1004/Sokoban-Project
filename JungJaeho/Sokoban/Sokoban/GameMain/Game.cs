@@ -17,11 +17,11 @@ namespace Sokoban
         public const int MIN_Y = 2;
         public const int MAX_X = 26;
         public const int MAX_Y = 13;
-        public const int OFFSET_X = 2;
+        public const int OFFSET_X = 1;
         public const int OFFSET_Y = 1;
 
         // Recorder Setting
-        public const int RECORD_COUNT = 5;
+        public const int RECORD_COUNT = 7;
         public const int REWIND_INTERVAL = 100;
     }
 }

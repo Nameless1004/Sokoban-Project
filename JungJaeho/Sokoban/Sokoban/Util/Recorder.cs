@@ -29,17 +29,19 @@ namespace Sokoban
         /// </summary>
         /// <param name="recordCount">최대 기록 수</param>
         /// <param name="rewindingSpeed">되감기 간격(ms)</param>
-        public Recorder(int recordCount, int rewindInterval)
+        public Recorder(int recordCount, int rewindInterval = 0)
         {
             _recordCount = recordCount;
             _playerMoveHistory = new PlayerInfo[_recordCount];
             _boxesMoveHistory  = new BoxInfo[_recordCount, Game.BOX_COUNT];
             _isRewinding = false;
             _rewindInterval = rewindInterval;
+            _maxIndex = 0;
         }
 
         private int             _recordCount;
         private int             _index;
+        private int _maxIndex;
         private bool            _isRewinding;
         private int             _rewindInterval;
         private PlayerInfo[]    _playerMoveHistory;
@@ -51,9 +53,12 @@ namespace Sokoban
         public int      RewindInterval { get { return _rewindInterval; } }
         #endregion
 
-        public void StartRewinding()
+        public bool StartRewinding()
         {
+            if (_index == 0) return false;
             _isRewinding = true;
+            _maxIndex = _index;
+            return true;
         }
 
         public void Update(ref Player player, ref Box[] boxes)
@@ -61,7 +66,7 @@ namespace Sokoban
             if (_isRewinding == false) return;
 
             Rewind(ref player, ref boxes);
-            Thread.Sleep(RewindInterval);
+            Thread.Sleep(1000 / _maxIndex);
         }
 
         /// <summary>
@@ -234,8 +239,8 @@ namespace Sokoban
            
             for (int i = 0; i < _index; ++i)
             {
-                ConsoleColor color = (ConsoleColor)(1+i%14);
-                //Console.ForegroundColor = ConsoleColor.Gray;
+                //ConsoleColor color = (ConsoleColor)(1+i%14);
+                ConsoleColor color = ConsoleColor.DarkGray;
                 renderer.Render(_playerMoveHistory[i].Pos, playerIcon, color);
             }
         }

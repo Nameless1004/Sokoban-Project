@@ -20,27 +20,31 @@ namespace Sokoban
         static void Main()
         {
             // 초기 세팅
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
             Console.ResetColor(); // 컬러를 초기화 하는 것
             Console.CursorVisible = false; // 커서를 숨기기
-            Console.Title = "홍성재의 파이어펀치"; // 타이틀을 설정한다.
+            Console.Title = "ㅇㅇ"; // 타이틀을 설정한다.
             Console.BackgroundColor = ConsoleColor.Black; // 배경색을 설정한다.
             Console.ForegroundColor = ConsoleColor.Yellow; // 글꼴색을 설정한다.
             Console.Clear(); // 출력된 내용을 지운다.
 
+            Sound clearSound = new Sound(@"C:\Users\jjho9\OneDrive\바탕 화면\Sokoban-Project\JungJaeho\Sokoban\Sounds\clearSound.wav");
+            Sound teleportSound = new Sound(@"C:\Users\jjho9\OneDrive\바탕 화면\Sokoban-Project\JungJaeho\Sokoban\Sounds\tpSound.wav");
+            
 
-            Recorder recorder = new Recorder(Game.RECORD_COUNT, Game.REWIND_INTERVAL);
+            Recorder recorder = new Recorder(Game.RECORD_COUNT/*, Game.REWIND_INTERVAL*/);
             Renderer renderer = new Renderer();
             //Teleporter tp = new Teleporter(new Vector2(5, 5), new Vector2(5, 9), "T", ConsoleColor.Blue);
-            Teleporter tp2 = new Teleporter(new Vector2(5, Game.MIN_Y+Game.OFFSET_Y), new Vector2(5, Game.MAX_Y-Game.OFFSET_Y), "T", ConsoleColor.Blue);
+            Teleporter tp2 = new Teleporter(new Vector2(5, Game.MIN_Y+Game.OFFSET_Y), new Vector2(5, Game.MAX_Y-Game.OFFSET_Y), "@", ConsoleColor.Cyan);
 
-            Player player = new Player(new Vector2(2, 3), 0, ConsoleColor.Yellow);
+            Player player = new Player(new Vector2(2, 3), 0, ConsoleColor.White);
 
             // 박스 위치를 저장하기 위한 변수
             Box[] boxes = new Box[3]
             {
-                new Box(new Vector2(3, 5), ConsoleColor.DarkCyan),
-                new Box(new Vector2(7, 4), ConsoleColor.DarkCyan),
-                new Box(new Vector2(4, 4), ConsoleColor.DarkCyan)
+                new Box(new Vector2(3, 5), ConsoleColor.DarkYellow),
+                new Box(new Vector2(7, 4), ConsoleColor.DarkYellow),
+                new Box(new Vector2(4, 4), ConsoleColor.DarkYellow)
             };
 
             // 박스가 골 위에 있는지를 저장하기 위한 변수
@@ -49,15 +53,15 @@ namespace Sokoban
             // 벽 위치를 저장하기 위한 변수
             Wall[] walls = new Wall[Game.WALL_COUNT]
            { 
-                new Wall(new Vector2(7, 7), ConsoleColor.Red),
+                new Wall(new Vector2(7, 7),  ConsoleColor.Red),
                 new Wall(new Vector2(7, 10), ConsoleColor.Red)
             };
 
             Goal[] goals = new Goal[Game.GOAL_COUNT]
             {
-                new Goal(new Vector2(9, 9), ConsoleColor.White),
-                new Goal(new Vector2(5, 6), ConsoleColor.White),
-                new Goal(new Vector2(3, 3), ConsoleColor.White)
+                new Goal(new Vector2(9, 9), ConsoleColor.Yellow),
+                new Goal(new Vector2(5, 6), ConsoleColor.Yellow),
+                new Goal(new Vector2(3, 3), ConsoleColor.Yellow)
             };
 
 
@@ -75,7 +79,16 @@ namespace Sokoban
 
                 if (key == ConsoleKey.Spacebar)
                 {
-                    recorder.StartRewinding();
+                    if(recorder.StartRewinding())
+                    {
+                        teleportSound.PlaySound();
+                    }
+                    else
+                    {
+                        key = ConsoleKey.NoName;
+                        continue;
+                    }
+                    key = ConsoleKey.NoName;
                 }
 
                 recorder.Update(ref player, ref boxes);
@@ -88,34 +101,15 @@ namespace Sokoban
 
                 Update(key);
 
-                // 박스와 골의 처리
-                int boxOnGoalCount = 0;
-
-                // 골 지점에 박스에 존재하냐?
-                for (int boxId = 0; boxId < Game.BOX_COUNT; ++boxId) // 모든 골 지점에 대해서
-                {
-                    // 현재 박스가 골 위에 올라와 있는지 체크한다.
-                    boxes[boxId].IsOnGoal = false; // 없을 가능성이 높기 때문에 false로 초기화 한다.
-
-                    for (int goalId = 0; goalId < Game.GOAL_COUNT; ++goalId) // 모든 박스에 대해서
-                    {
-                        // 박스가 골 지점 위에 있는지 확인한다.
-                        if (IsCollided(boxes[boxId].Pos, goals[goalId].Pos))
-                        {
-                            ++boxOnGoalCount;
-                            boxes[boxId].IsOnGoal = true; // 박스가 골 위에 있다는 사실을 저장해둔다.
-                            break;
-                        }
-                    }
-                }
-
+                int boxOnGoalCount = CountBoxOnGoal(boxes, goals, ref isBoxOnGoal);
 
                 // 모든 골 지점에 박스가 올라와 있다면?
                 if (boxOnGoalCount == Game.GOAL_COUNT)
                 {
+                    clearSound.PlaySound();
                     Console.Clear();
                     Console.WriteLine("축하합니다. 클리어 하셨습니다.");
-
+                    Thread.Sleep(2500);
                     break;
                 }
 
@@ -133,29 +127,29 @@ namespace Sokoban
                 if (player.Pos.X - 1 >= Game.MIN_X + Game.OFFSET_X)
                     renderer.Render(new Vector2(player.Pos.X - 1, player.Pos.Y), "ε", player.Color);
                 // 플레이어 오른쪽 날개
-                if (player.Pos.X - 1 >= Game.MIN_X + Game.OFFSET_X)
-                    renderer.Render(new Vector2(player.Pos.X - 1, player.Pos.Y), "ε", player.Color);
+                if (player.Pos.X + 1 <= Game.MAX_X - Game.OFFSET_Y)
+                    renderer.Render(new Vector2(player.Pos.X + 1, player.Pos.Y), "з", player.Color);
 
+                // 테두리를 그려준다
                 for (int i = Game.MIN_X; i <= Game.MAX_X; ++i)
                 {
-                    Random rand = new Random();
-                    ConsoleColor col = recorder.IsRewinding ? (ConsoleColor)rand.Next(1, 15) : ConsoleColor.White;
-
-                    renderer.Render(new Vector2(i, Game.MIN_Y), "■", col);
-                    renderer.Render(new Vector2(i, Game.MAX_Y), "■", col);
-                }
-                for (int i = Game.MIN_Y; i <= Game.MAX_Y; ++i)
-                {
-                    Random rand = new Random();
-                    ConsoleColor col = recorder.IsRewinding ? (ConsoleColor)rand.Next(1, 15) : ConsoleColor.White;
-                    renderer.Render(new Vector2(Game.MIN_X, i), "■", col);
-                    renderer.Render(new Vector2(Game.MAX_X, i), "■", col);
+                    for(int j= Game.MIN_Y; j <= Game.MAX_Y; ++j)
+                    {
+                        if (i == Game.MIN_X || i == Game.MAX_X || j == Game.MIN_Y || j == Game.MAX_Y)
+                        {
+                            Random rand = new Random();
+                            ConsoleColor col = recorder.IsRewinding ? (ConsoleColor)rand.Next(1, 15) : ConsoleColor.Red;
+                            renderer.Render(new Vector2(i, j), "∏", col);
+                            renderer.Render(new Vector2(i, j), "∏", col);
+                        }
+                    }
                 }
 
                 // 골을 그린다.
                 for (int i = 0; i < Game.GOAL_COUNT; ++i)
                 {
-                    renderer.Render(goals[i].Pos, "G", goals[i].Color);
+
+                    renderer.Render(goals[i].Pos, "⚐", goals[i].Color);
                 }
 
                 // Teleport
@@ -166,26 +160,28 @@ namespace Sokoban
                 renderer.Render(tp2.Pos2, tp2.Icon, tp2.Color);
 
                 // 플레이어 몸
+
                 renderer.Render(player.Pos, "ё", player.Color);
 
 
-                if (player.Pos.X + 1 <= Game.MAX_X - Game.OFFSET_Y)
-                    renderer.Render(new Vector2(player.Pos.X + 1, player.Pos.Y), "з", player.Color);
+
 
 
 
                 // 박스를 그린다.
                 for (int boxId = 0; boxId < Game.BOX_COUNT; ++boxId)
                 {
-                    string boxShape = isBoxOnGoal[boxId] ? "O" : "B";
+                    string boxShape = isBoxOnGoal[boxId] ? "▣" : "▩";
                     renderer.Render(boxes[boxId].Pos, boxShape, boxes[boxId].Color);
                 }
 
                 // 벽을 그린다.
                 for (int wallId = 0; wallId < Game.WALL_COUNT; ++wallId)
                 {
-                    renderer.Render(walls[wallId].Pos, "W", walls[wallId].Color);
+                    renderer.Render(walls[wallId].Pos, "■", walls[wallId].Color);
                 }
+
+                // Draw Ui
                 if (recorder.IsRewinding)
                 {
                     string ui = $"| Rewinding... : {recorder.Index:D2} |";
@@ -198,6 +194,10 @@ namespace Sokoban
                     renderer.Render(new Vector2(startPos, 0), ui, ConsoleColor.White);
                     renderer.Render(new Vector2(startPos, 1), builder.ToString(), ConsoleColor.White);
                 }
+
+                renderer.Render(new Vector2(Game.MAX_X + 2, Game.MIN_Y),     "-------------------", ConsoleColor.White);
+                renderer.Render(new Vector2(Game.MAX_X + 2, Game.MIN_Y + 1), "  Space : 되감기   ", ConsoleColor.White);
+                renderer.Render(new Vector2(Game.MAX_X + 2, Game.MIN_Y + 2), "-------------------", ConsoleColor.White);
 
             }
 
@@ -213,27 +213,7 @@ namespace Sokoban
                         continue;
                     }
 
-                    switch (player.MoveDirection)
-                    {
-                        case Direction.Left:
-                            player.Pos.X = walls[wallId].Pos.X + 1;
-                            break;
-                        case Direction.Right:
-                            player.Pos.X = walls[wallId].Pos.X - 1;
-                            break;
-                        case Direction.Up:
-                            player.Pos.Y = walls[wallId].Pos.Y + 1;
-                            break;
-                        case Direction.Down:
-                            player.Pos.Y = walls[wallId].Pos.Y - 1;
-                            break;
-                        default:
-                            Console.Clear();
-                            Console.WriteLine($"[Error] 플레이어 이동 방향 데이터가 오류입니다. : {player.MoveDirection}");
-
-                            return;
-                    }
-
+                    OnCollision(player.MoveDirection, ref player.Pos, in walls[wallId].Pos);
                     break;
                 }
 
@@ -250,29 +230,24 @@ namespace Sokoban
                     switch (player.MoveDirection)
                     {
                         case Direction.Left:
-                            boxes[i].Pos.X = Math.Clamp(boxes[i].Pos.X - 1, Game.MIN_X + Game.OFFSET_X, Game.MAX_X - Game.OFFSET_X);
-                            player.Pos.X = boxes[i].Pos.X + 1;
+                            MoveToLeftOfTarget(out boxes[i].Pos, in player.Pos);
                             break;
                         case Direction.Right:
-                            boxes[i].Pos.X = Math.Clamp(boxes[i].Pos.X + 1, Game.MIN_X + Game.OFFSET_X, Game.MAX_X - Game.OFFSET_X);
-                            player.Pos.X = boxes[i].Pos.X - 1;
+                            MoveToRightOfTarget(out boxes[i].Pos, in player.Pos);
                             break;
                         case Direction.Up:
-                            boxes[i].Pos.Y = Math.Clamp(boxes[i].Pos.Y - 1, Game.MIN_Y + Game.OFFSET_Y, Game.MAX_Y - Game.OFFSET_Y);
-                            player.Pos.Y = boxes[i].Pos.Y + 1;
+                            MoveToUpOfTarget(out boxes[i].Pos, in player.Pos);
                             break;
                         case Direction.Down:
-                            boxes[i].Pos.Y = Math.Clamp(boxes[i].Pos.Y + 1, Game.MIN_Y + Game.OFFSET_Y, Game.MAX_Y - Game.OFFSET_Y);
-                            player.Pos.Y = boxes[i].Pos.Y - 1;
+                            MoveToDownOfTarget(out boxes[i].Pos, in player.Pos);
                             break;
                         default:
-                            Console.Clear();
-                            Console.WriteLine($"[Error] 플레이어 이동 방향 데이터가 오류입니다. : {player.MoveDirection}");
-
-                            return;
+                            ExitWithError($"[Error] 플레이어 방향  : {player.MoveDirection}");
+                            break;
                     }
 
                     player.PushedBoxIndex = i;
+                    OnCollision(player.MoveDirection, ref player.Pos, in boxes[i].Pos);
                     break;
                 }
 
@@ -284,30 +259,8 @@ namespace Sokoban
                         continue;
                     }
 
-                    switch (player.MoveDirection)
-                    {
-                        case Direction.Left:
-                            boxes[player.PushedBoxIndex].Pos.X = walls[wallId].Pos.X + 1;
-                            player.Pos.X = boxes[player.PushedBoxIndex].Pos.X + 1;
-                            break;
-                        case Direction.Right:
-                            boxes[player.PushedBoxIndex].Pos.X = walls[wallId].Pos.X - 1;
-                            player.Pos.X = boxes[player.PushedBoxIndex].Pos.X - 1;
-                            break;
-                        case Direction.Up:
-                            boxes[player.PushedBoxIndex].Pos.Y = walls[wallId].Pos.Y + 1;
-                            player.Pos.Y = boxes[player.PushedBoxIndex].Pos.Y + 1;
-                            break;
-                        case Direction.Down:
-                            boxes[player.PushedBoxIndex].Pos.Y = walls[wallId].Pos.Y - 1;
-                            player.Pos.Y = boxes[player.PushedBoxIndex].Pos.Y - 1;
-                            break;
-                        default:
-                            Console.Clear();
-                            Console.WriteLine($"[Error] 플레이어 이동 방향 데이터가 오류입니다. : {player.MoveDirection}");
-
-                            return;
-                    }
+                    OnCollision(player.MoveDirection, ref boxes[player.PushedBoxIndex].Pos, walls[wallId].Pos);
+                    OnCollision(player.MoveDirection, ref player.Pos, boxes[player.PushedBoxIndex].Pos);
 
                     break;
                 }
@@ -326,53 +279,13 @@ namespace Sokoban
                         continue;
                     }
 
-                    switch (player.MoveDirection)
-                    {
-                        case Direction.Left:
-                            boxes[player.PushedBoxIndex].Pos.X = boxes[collidedBoxId].Pos.X + 1;
-                            player.Pos.X = boxes[player.PushedBoxIndex].Pos.X + 1;
-
-                            break;
-                        case Direction.Right:
-                            boxes[player.PushedBoxIndex].Pos.X = boxes[collidedBoxId].Pos.X - 1;
-                            player.Pos.X = boxes[player.PushedBoxIndex].Pos.X - 1;
-
-                            break;
-                        case Direction.Up:
-                            boxes[player.PushedBoxIndex].Pos.Y = boxes[collidedBoxId].Pos.Y + 1;
-                            player.Pos.Y = boxes[player.PushedBoxIndex].Pos.Y + 1;
-
-                            break;
-                        case Direction.Down:
-                            boxes[player.PushedBoxIndex].Pos.Y = boxes[collidedBoxId].Pos.Y - 1;
-                            player.Pos.Y = boxes[player.PushedBoxIndex].Pos.Y - 1;
-
-                            break;
-                        default:
-                            Console.Clear();
-                            Console.WriteLine($"[Error] 플레이어 이동 방향 데이터가 오류입니다. : {player.MoveDirection}");
-
-                            return;
-                    }
-
+                    OnCollision(player.MoveDirection, ref boxes[player.PushedBoxIndex].Pos, in boxes[collidedBoxId].Pos);
+                    OnCollision(player.MoveDirection, ref player.Pos, in boxes[player.PushedBoxIndex].Pos);
                     break;
                 }
 
                 //tp.Update(ref player, in boxes, in walls);
                 tp2.Update(ref player, in boxes, in walls);
-
-                for (int i = 0; i < Game.BOX_COUNT; ++i)
-                {
-                    isBoxOnGoal[i] = false;
-                    for(int j = 0; j < Game.GOAL_COUNT; ++j)
-                    {
-                        if(IsCollided(boxes[i].Pos, goals[j].Pos))
-                        {
-                            isBoxOnGoal[i] = true;
-                            break;
-                        }
-                    }
-                }
 
             }
             
@@ -384,28 +297,79 @@ namespace Sokoban
                 switch (key)
                 {
                     case ConsoleKey.LeftArrow:
-                        player.Pos.X = Math.Max(Game.MIN_X + Game.OFFSET_X, player.Pos.X - 1);
+                        MoveToLeftOfTarget(out player.Pos, in player.Pos);
                         player.MoveDirection = Direction.Left;
                         break;
                     case ConsoleKey.RightArrow:
-                        player.Pos.X = Math.Min(player.Pos.X + 1, Game.MAX_X - Game.OFFSET_X);
+                        MoveToRightOfTarget(out player.Pos, in player.Pos);
                         player.MoveDirection = Direction.Right;
                         break;
                     case ConsoleKey.UpArrow:
-                        player.Pos.Y = Math.Max(Game.MIN_Y + Game.OFFSET_Y, player.Pos.Y - 1);
+                        MoveToUpOfTarget(out player.Pos, in player.Pos);
                         player.MoveDirection = Direction.Up;
                         break;
                     case ConsoleKey.DownArrow:
-                        player.Pos.Y = Math.Min(player.Pos.Y + 1, Game.MAX_Y - Game.OFFSET_Y);
+                        MoveToDownOfTarget(out player.Pos, in player.Pos);
                         player.MoveDirection = Direction.Down;
                         break;
                 }
             }
-            
-            
+
+            void OnCollision(Direction playerMoveDirection, ref Vector2 objPos, in Vector2 collidedObjPos)
+            {
+                switch(playerMoveDirection)
+                {
+                    case Direction.Left:
+                        MoveToRightOfTarget(out objPos, in collidedObjPos);
+                        break;
+                    case Direction.Right:
+                        MoveToLeftOfTarget(out objPos, in collidedObjPos);
+                        break;
+                    case Direction.Up:
+                        MoveToDownOfTarget(out objPos, in collidedObjPos);
+                        break;
+                    case Direction.Down:
+                        MoveToUpOfTarget(out objPos, in collidedObjPos);
+                        break;
+                }
+            }
+
+            int CountBoxOnGoal(in Box[] boxes, in Goal[] goals, ref bool[] isBoxOnGoal)
+            {
+                int boxCount = boxes.Length;
+                int goalCount = goals.Length;
+
+                int result = 0;
+                for(int boxId = 0; boxId < boxCount; ++boxId)
+                {
+                    isBoxOnGoal[boxId] = false;
+                    for(int goalId = 0; goalId < goalCount; ++goalId)
+                    {
+                        if(IsCollided(boxes[boxId].Pos, goals[goalId].Pos))
+                        {
+                            ++result;
+                            isBoxOnGoal[(boxId)] = true;
+                            break;
+                        }
+                    }
+                }
+                return result;
+            }
+
+            void MoveToLeftOfTarget(out Vector2 pos, in Vector2 target) => pos = new Vector2(Math.Max(Game.MIN_X + Game.OFFSET_X, target.X - 1), target.Y);
+            void MoveToRightOfTarget(out Vector2 pos, in Vector2 target) => pos = new Vector2(Math.Min(target.X + 1, Game.MAX_X - Game.OFFSET_X), target.Y);
+            void MoveToUpOfTarget(out Vector2 pos, in Vector2 target) => pos = new Vector2(target.X, Math.Max(Game.MIN_Y + Game.OFFSET_Y, target.Y - 1));
+            void MoveToDownOfTarget(out Vector2 pos, in Vector2 target) => pos = new Vector2(target.X, Math.Min(target.Y + 1, Game.MAX_Y - Game.OFFSET_Y));
+
+            void ExitWithError(string errorMessage)
+            {
+                Console.Clear();
+                Console.WriteLine(errorMessage);   
+                Environment.Exit(1);
+            }
 
             // 두 물체가 충돌했는지 판별합니다.
-            bool IsCollided(Vector2 x1, Vector2 x2)
+            bool IsCollided(in Vector2 x1, in Vector2 x2)
             {
                 if (x1 == x2)
                 {

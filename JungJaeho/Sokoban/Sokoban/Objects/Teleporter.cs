@@ -48,33 +48,33 @@ namespace Sokoban
             // 박스 텔포
             if (pushedBox.Pos == Pos1)
             {
-                Vector prevBoxPosX = pushedBox.Pos.X;
+                Vector2 prevBoxPos = pushedBox.Pos;
 
                 if (false == IsTeleportable(Pos2, player.MoveDirection, boxes, walls))
                 {
                     switch (player.MoveDirection)
                     {
                         case Direction.Left:
-                            pushedBox.Pos.X = prevBoxPosX + 1;
-                            pushedBox.Pos.Y = prevBoxPosY;
+                            pushedBox.Pos.X = prevBoxPos.X + 1;
+                            pushedBox.Pos.Y = prevBoxPos.Y;
                             player.Pos.X = player.Pos.X + 1;
                             break;
 
                         case Direction.Right:
-                            pushedBox.Pos.X = prevBoxPosX - 1;
-                            pushedBox.Pos.Y = prevBoxPosY;
+                            pushedBox.Pos.X = prevBoxPos.X - 1;
+                            pushedBox.Pos.Y = prevBoxPos.Y;
                             player.Pos.X = player.Pos.X - 1;
                             break;
 
                         case Direction.Up:
-                            pushedBox.Pos.X = prevBoxPosX;
-                            pushedBox.Pos.Y = prevBoxPosY + 1;
+                            pushedBox.Pos.X = prevBoxPos.X;
+                            pushedBox.Pos.Y = prevBoxPos.Y + 1;
                             player.Pos.Y = player.Pos.Y + 1;
                             break;
 
                         case Direction.Down:
-                            pushedBox.Pos.X = prevBoxPosX;
-                            pushedBox.Pos.Y = prevBoxPosY - 1;
+                            pushedBox.Pos.X = prevBoxPos.X;
+                            pushedBox.Pos.Y = prevBoxPos.Y - 1;
                             player.Pos.Y = player.Pos.Y - 1;
                             break;
                     }
@@ -96,21 +96,18 @@ namespace Sokoban
                         case Direction.Up:
                             pushedBox.Pos.X = Pos2.X;
                             pushedBox.Pos.Y = Pos2.Y - 1;
-                            player.Pos.Y = player.Pos.Y + 1;
                             break;
 
                         case Direction.Down:
                             pushedBox.Pos.X = Pos2.X;
                             pushedBox.Pos.Y = Pos2.Y + 1;
-                            player.Pos.Y = player.Pos.Y - 1;
                             break;
                     }
                 }
             }
-            else if (pushedBox.Pos.X == Pos2.X && pushedBox.Pos.Y == Pos2.Y)
+            else if (pushedBox.Pos == Pos2)
             {
-                int prevBoxPosX = pushedBox.Pos.X;
-                int prevBoxPosY = pushedBox.Pos.Y;
+                Vector2 prevBoxPos = pushedBox.Pos;
 
 
                 if (false == IsTeleportable(Pos1, player.MoveDirection, in boxes,in walls))
@@ -118,26 +115,26 @@ namespace Sokoban
                     switch (player.MoveDirection)
                     {
                         case Direction.Left:
-                            pushedBox.Pos.X = prevBoxPosX + 1;
-                            pushedBox.Pos.Y = prevBoxPosY;
+                            pushedBox.Pos.X = prevBoxPos.X + 1;
+                            pushedBox.Pos.Y = prevBoxPos.Y;
                             player.Pos.X = player.Pos.X + 1;
                             break;
 
                         case Direction.Right:
-                            pushedBox.Pos.X = prevBoxPosX - 1;
-                            pushedBox.Pos.Y = prevBoxPosY;
+                            pushedBox.Pos.X = prevBoxPos.X - 1;
+                            pushedBox.Pos.Y = prevBoxPos.Y;
                             player.Pos.X = player.Pos.X - 1;
                             break;
 
                         case Direction.Up:
-                            pushedBox.Pos.X = prevBoxPosX;
-                            pushedBox.Pos.Y = prevBoxPosY + 1;
+                            pushedBox.Pos.X = prevBoxPos.X;
+                            pushedBox.Pos.Y = prevBoxPos.Y + 1;
                             player.Pos.Y = player.Pos.Y + 1;
                             break;
 
                         case Direction.Down:
-                            pushedBox.Pos.X = prevBoxPosX;
-                            pushedBox.Pos.Y = prevBoxPosY - 1;
+                            pushedBox.Pos.X = prevBoxPos.X;
+                            pushedBox.Pos.Y = prevBoxPos.Y - 1;
                             player.Pos.Y = player.Pos.Y - 1;
                             break;
                     }
@@ -174,17 +171,20 @@ namespace Sokoban
 
         }
 
-        private bool IsTeleportable(Vector2 Pos, Direction moveDirection, in Box[] boxes, in Wall[] walls)
+        private bool IsTeleportable(in Vector2 Pos, Direction moveDirection, in Box[] boxes, in Wall[] walls)
         {
             Vector2 right =  new Vector2(Pos.X + 1, Pos.Y);
             Vector2 left =   new Vector2(Pos.X - 1, Pos.Y);
             Vector2 top =    new Vector2(Pos.X, Pos.Y - 1);
             Vector2 bottom = new Vector2(Pos.X, Pos.Y + 1);
-            if (left.X <= Game.MIN_X + Game.OFFSET_X || Game.MAX_X - Game.OFFSET_X <= right.X || top.Y <= Game.MIN_Y + Game.OFFSET_Y || Game.MAX_Y - Game.OFFSET_Y <= bottom.Y)
-                return false;
+
             switch (moveDirection)
             {
                 case Direction.Left:
+                    if(left.X < Game.MIN_X + Game.OFFSET_X)
+                    {
+                        return false;
+                    }
                     for (int i = 0; i < boxes.Length; ++i)
                     {
                         if (boxes[i].Pos == left)
@@ -201,6 +201,10 @@ namespace Sokoban
                     }
                     break;
                 case Direction.Right:
+                    if(Game.MAX_X - Game.OFFSET_X < right.X)
+                    {
+                        return false;
+                    }
                     for (int i = 0; i < boxes.Length; ++i)
                     {
                         if (boxes[i].Pos == right)
@@ -217,6 +221,11 @@ namespace Sokoban
                     }
                     break;
                 case Direction.Up:
+                    if(top.Y < Game.MIN_Y + Game.OFFSET_Y)
+                    {
+                        return false;
+                    }
+
                     for (int i = 0; i < boxes.Length; ++i)
                     {
                         if (boxes[i].Pos == top)
@@ -233,6 +242,10 @@ namespace Sokoban
                     }
                     break;
                 case Direction.Down:
+                    if(Game.MAX_Y - Game.OFFSET_Y < bottom.Y)
+                    {
+                        return false;
+                    }
                     for (int i = 0; i < boxes.Length; ++i)
                     {
                         if (boxes[i].Pos == bottom)
