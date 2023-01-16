@@ -11,7 +11,7 @@ namespace Sokoban
         // 기호 상수 정의
         public const int GOAL_COUNT = 3;
         public const int BOX_COUNT = GOAL_COUNT;
-        public const int WALL_COUNT = 2;
+        public const int WALL_COUNT = 12;
 
         public const int MIN_X = 0;
         public const int MIN_Y = 2;
@@ -21,7 +21,7 @@ namespace Sokoban
         public const int OFFSET_Y = 1;
 
         // Recorder Setting
-        public const int RECORD_COUNT = 7;
+        public const int RECORD_COUNT = 15;
         public const int REWIND_INTERVAL = 100;
     }
 }

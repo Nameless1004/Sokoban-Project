@@ -29,19 +29,17 @@ namespace Sokoban
         /// </summary>
         /// <param name="recordCount">최대 기록 수</param>
         /// <param name="rewindingSpeed">되감기 간격(ms)</param>
-        public Recorder(int recordCount, int rewindInterval = 0)
+        public Recorder(int recordCount, int rewindInterval)
         {
             _recordCount = recordCount;
             _playerMoveHistory = new PlayerInfo[_recordCount];
             _boxesMoveHistory  = new BoxInfo[_recordCount, Game.BOX_COUNT];
             _isRewinding = false;
             _rewindInterval = rewindInterval;
-            _maxIndex = 0;
         }
 
         private int             _recordCount;
         private int             _index;
-        private int _maxIndex;
         private bool            _isRewinding;
         private int             _rewindInterval;
         private PlayerInfo[]    _playerMoveHistory;
@@ -57,7 +55,6 @@ namespace Sokoban
         {
             if (_index == 0) return false;
             _isRewinding = true;
-            _maxIndex = _index;
             return true;
         }
 
@@ -66,7 +63,7 @@ namespace Sokoban
             if (_isRewinding == false) return;
 
             Rewind(ref player, ref boxes);
-            Thread.Sleep(1000 / _maxIndex);
+            Thread.Sleep(_rewindInterval);
         }
 
         /// <summary>
@@ -82,7 +79,7 @@ namespace Sokoban
                 IsRewinding = false;
                 return;
             }
-            RecoveryPlayer(out player, _index - 1);
+            RecoveryPlayer(ref player, _index - 1);
             RecoveryBoxes(ref boxes, _index - 1);
             --_index;
         }
@@ -93,20 +90,19 @@ namespace Sokoban
         /// </summary>
         /// <param name="player">플레이어</param>
         /// <param name="boxes">박스들</param>
-        public void Record(ref Player player, Box[] boxes)
+        public void Record(Player player, Box[] boxes)
         {
-            
             if (_index < _recordCount)
             {
-                RecordPlayerMove(ref player, _index);
-                RecordBoxesMove(boxes, _index);
+                RecordPlayerMove(player, _index);
+                RecordBoxesMove(ref boxes, _index);
                 _index++;
             }
             else
             {
                 MoveForwardElements();
-                RecordPlayerMove(ref player, _index - 1);
-                RecordBoxesMove(boxes, _index - 1);
+                RecordPlayerMove(player, _index - 1);
+                RecordBoxesMove(ref boxes, _index - 1);
             }
         }
 
@@ -116,7 +112,7 @@ namespace Sokoban
         /// </summary>
         /// <param name="player">플레이어 객체</param>
         /// <param name="index">기록할 인덱스</param>
-        private void RecordPlayerMove(ref Player player, int index)
+        private void RecordPlayerMove(Player player, int index)
         {
             PlayerInfo p = ExtractPlayerInfo(in player);
             _playerMoveHistory[index] = p;
@@ -127,7 +123,7 @@ namespace Sokoban
         /// </summary>
         /// <param name="boxes">박스담은 배열</param>
         /// <param name="index">기록할 인덱스</param>
-        private void RecordBoxesMove(Box[] boxes, int index)
+        private void RecordBoxesMove(ref Box[] boxes, int index)
         {
             for(int i = 0; i < Game.BOX_COUNT; ++i)
             {
@@ -193,7 +189,7 @@ namespace Sokoban
         /// </summary>
         /// <param name="player">플레이어 객체</param>
         /// <param name="historyIndex">옮길 시점</param>
-        private void RecoveryPlayer(out Player player, int historyIndex)
+        private void RecoveryPlayer(ref Player player, int historyIndex)
         {
             PlayerInfo playerInfo = _playerMoveHistory[historyIndex];
 

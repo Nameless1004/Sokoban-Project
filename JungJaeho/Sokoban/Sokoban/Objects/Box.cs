@@ -18,6 +18,44 @@ namespace Sokoban
         public Vector2 Pos;
         public bool IsOnGoal;
         public ConsoleColor Color;
+
+        public void MoveToDirection(Direction dir)
+        {
+            switch (dir)
+            {
+                case Direction.Left:
+                    Pos.X -= 1;
+                    break;
+                case Direction.Right:
+                    Pos.X += 1;
+                    break;
+                case Direction.Up:
+                    Pos.Y -= 1;
+                    break;
+                case Direction.Down:
+                    Pos.Y += 1;
+                    break;
+            }
+
+        }
+        public void OnCollision(Direction dir)
+        {
+            switch (dir)
+            {
+                case Direction.Left:
+                    Pos.X += 1;
+                    break;
+                case Direction.Right:
+                    Pos.X -= 1;
+                    break;
+                case Direction.Up:
+                    Pos.Y += 1;
+                    break;
+                case Direction.Down:
+                    Pos.Y -= 1;
+                    break;
+            }
+        }
     }
 
     //class Box
@@ -30,5 +68,4 @@ namespace Sokoban
     //    public int Y { get { return _y; } set { _y = value; } }
     //    public bool IsOnGoal { get { return _isOnGoal; } set { _isOnGoal = IsOnGoal; } }
     //}
-
 }

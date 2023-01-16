@@ -16,11 +16,11 @@ namespace Sokoban
 
     public class Sokoban
     {
+        delegate void CollisionCallback(Direction dir, ref Vector2 pos, in Vector2 collideObjPos);
 
         static void Main()
         {
             // 초기 세팅
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
             Console.ResetColor(); // 컬러를 초기화 하는 것
             Console.CursorVisible = false; // 커서를 숨기기
             Console.Title = "ㅇㅇ"; // 타이틀을 설정한다.
@@ -28,22 +28,20 @@ namespace Sokoban
             Console.ForegroundColor = ConsoleColor.Yellow; // 글꼴색을 설정한다.
             Console.Clear(); // 출력된 내용을 지운다.
 
-            Sound clearSound = new Sound(@"C:\Users\jjho9\OneDrive\바탕 화면\Sokoban-Project\JungJaeho\Sokoban\Sounds\clearSound.wav");
-            Sound teleportSound = new Sound(@"C:\Users\jjho9\OneDrive\바탕 화면\Sokoban-Project\JungJaeho\Sokoban\Sounds\tpSound.wav");
-            
+            SoundManager.GetInstance().AddSound("end", @"..\..\..\Sounds\clearSound.wav");
+            SoundManager.GetInstance().AddSound("rewind", @"..\..\..\Sounds\rewindSound.wav");
 
-            Recorder recorder = new Recorder(Game.RECORD_COUNT/*, Game.REWIND_INTERVAL*/);
+            Recorder recorder = new Recorder(Game.RECORD_COUNT, Game.REWIND_INTERVAL);
             Renderer renderer = new Renderer();
-            //Teleporter tp = new Teleporter(new Vector2(5, 5), new Vector2(5, 9), "T", ConsoleColor.Blue);
-            Teleporter tp2 = new Teleporter(new Vector2(5, Game.MIN_Y+Game.OFFSET_Y), new Vector2(5, Game.MAX_Y-Game.OFFSET_Y), "@", ConsoleColor.Cyan);
-
+            
+            Teleporter tp = new Teleporter(new Vector2(5, Game.MIN_Y+Game.OFFSET_Y + 2), new Vector2(25, Game.MAX_Y-Game.OFFSET_Y), "@", ConsoleColor.Cyan);
             Player player = new Player(new Vector2(2, 3), 0, ConsoleColor.White);
 
             // 박스 위치를 저장하기 위한 변수
             Box[] boxes = new Box[3]
             {
-                new Box(new Vector2(3, 5), ConsoleColor.DarkYellow),
-                new Box(new Vector2(7, 4), ConsoleColor.DarkYellow),
+                new Box(new Vector2(13, 5), ConsoleColor.DarkYellow),
+                new Box(new Vector2(13, 8), ConsoleColor.DarkYellow),
                 new Box(new Vector2(4, 4), ConsoleColor.DarkYellow)
             };
 
@@ -54,14 +52,25 @@ namespace Sokoban
             Wall[] walls = new Wall[Game.WALL_COUNT]
            { 
                 new Wall(new Vector2(7, 7),  ConsoleColor.Red),
-                new Wall(new Vector2(7, 10), ConsoleColor.Red)
+                new Wall(new Vector2(20, 10), ConsoleColor.Red),
+                new Wall(new Vector2(20, 11), ConsoleColor.Red),
+                new Wall(new Vector2(20, 12), ConsoleColor.Red),
+                new Wall(new Vector2(21, 10), ConsoleColor.Red),
+                new Wall(new Vector2(22, 10), ConsoleColor.Red),
+                new Wall(new Vector2(23, 10), ConsoleColor.Red),
+                new Wall(new Vector2(24, 10), ConsoleColor.Red),
+                new Wall(new Vector2(25, 10), ConsoleColor.Red),
+
+                new Wall(new Vector2(15, 7), ConsoleColor.Red),
+                new Wall(new Vector2(12, 5), ConsoleColor.Red),
+                new Wall(new Vector2(8, 9), ConsoleColor.Red),
             };
 
             Goal[] goals = new Goal[Game.GOAL_COUNT]
             {
-                new Goal(new Vector2(9, 9), ConsoleColor.Yellow),
+                new Goal(new Vector2(22, 12), ConsoleColor.Yellow),
                 new Goal(new Vector2(5, 6), ConsoleColor.Yellow),
-                new Goal(new Vector2(3, 3), ConsoleColor.Yellow)
+                new Goal(new Vector2(12, 8), ConsoleColor.Yellow)
             };
 
 
@@ -81,14 +90,15 @@ namespace Sokoban
                 {
                     if(recorder.StartRewinding())
                     {
-                        teleportSound.PlaySound();
+                        key = ConsoleKey.NoName;
+                        //SoundManager.GetInstance().PlaySound("rewind");
+                        //Thread.Sleep(1000);
                     }
                     else
                     {
                         key = ConsoleKey.NoName;
                         continue;
                     }
-                    key = ConsoleKey.NoName;
                 }
 
                 recorder.Update(ref player, ref boxes);
@@ -97,7 +107,7 @@ namespace Sokoban
                     continue;
 
                 // player, boxes 기록
-                recorder.Record(ref player, boxes);
+                recorder.Record(player, boxes);
 
                 Update(key);
 
@@ -106,7 +116,7 @@ namespace Sokoban
                 // 모든 골 지점에 박스가 올라와 있다면?
                 if (boxOnGoalCount == Game.GOAL_COUNT)
                 {
-                    clearSound.PlaySound();
+                    SoundManager.GetInstance().PlaySound("end");
                     Console.Clear();
                     Console.WriteLine("축하합니다. 클리어 하셨습니다.");
                     Thread.Sleep(2500);
@@ -125,10 +135,15 @@ namespace Sokoban
 
                 // 플레이어 왼쪽날개
                 if (player.Pos.X - 1 >= Game.MIN_X + Game.OFFSET_X)
+                {
                     renderer.Render(new Vector2(player.Pos.X - 1, player.Pos.Y), "ε", player.Color);
+                }
+
                 // 플레이어 오른쪽 날개
                 if (player.Pos.X + 1 <= Game.MAX_X - Game.OFFSET_Y)
+                {
                     renderer.Render(new Vector2(player.Pos.X + 1, player.Pos.Y), "з", player.Color);
+                }
 
                 // 테두리를 그려준다
                 for (int i = Game.MIN_X; i <= Game.MAX_X; ++i)
@@ -152,21 +167,12 @@ namespace Sokoban
                     renderer.Render(goals[i].Pos, "⚐", goals[i].Color);
                 }
 
-                // Teleport
-                //renderer.Render(tp.Pos1, tp.Icon, tp.Color);
-                //renderer.Render(tp.Pos2, tp.Icon, tp.Color);
                 
-                renderer.Render(tp2.Pos1, tp2.Icon, tp2.Color);
-                renderer.Render(tp2.Pos2, tp2.Icon, tp2.Color);
+                renderer.Render(tp.Pos1, tp.Icon, tp.Color);
+                renderer.Render(tp.Pos2, tp.Icon, tp.Color);
 
                 // 플레이어 몸
-
                 renderer.Render(player.Pos, "ё", player.Color);
-
-
-
-
-
 
                 // 박스를 그린다.
                 for (int boxId = 0; boxId < Game.BOX_COUNT; ++boxId)
@@ -198,6 +204,10 @@ namespace Sokoban
                 renderer.Render(new Vector2(Game.MAX_X + 2, Game.MIN_Y),     "-------------------", ConsoleColor.White);
                 renderer.Render(new Vector2(Game.MAX_X + 2, Game.MIN_Y + 1), "  Space : 되감기   ", ConsoleColor.White);
                 renderer.Render(new Vector2(Game.MAX_X + 2, Game.MIN_Y + 2), "-------------------", ConsoleColor.White);
+                renderer.Render(new Vector2(Game.MAX_X + 2, Game.MIN_Y + 3), "-------------------", ConsoleColor.White);
+                renderer.Render(new Vector2(Game.MAX_X + 2, Game.MIN_Y + 4), "   플레이어 좌표     ", ConsoleColor.White);
+                renderer.Render(new Vector2(Game.MAX_X + 2, Game.MIN_Y + 5), $"    X : {player.Pos.X - (Game.MIN_X + Game.OFFSET_X)} Y : {player.Pos.Y - (Game.MIN_Y + Game.OFFSET_Y)}  ", ConsoleColor.White);
+                renderer.Render(new Vector2(Game.MAX_X + 2, Game.MIN_Y + 6), "-------------------", ConsoleColor.White);
 
             }
 
@@ -213,10 +223,9 @@ namespace Sokoban
                         continue;
                     }
 
-                    OnCollision(player.MoveDirection, ref player.Pos, in walls[wallId].Pos);
+                    OnCollision(() => { PushOut(player.MoveDirection, ref player.Pos, in walls[wallId].Pos); });
                     break;
                 }
-
 
                 // 박스 이동 처리
                 // 플레이어가 박스를 밀었을 때라는 게 무엇을 의미하는가? => 플레이어가 이동했는데 플레이어의 위치와 박스 위치가 겹쳤다.
@@ -245,9 +254,9 @@ namespace Sokoban
                             ExitWithError($"[Error] 플레이어 방향  : {player.MoveDirection}");
                             break;
                     }
-
                     player.PushedBoxIndex = i;
-                    OnCollision(player.MoveDirection, ref player.Pos, in boxes[i].Pos);
+
+                    OnCollision(() => { PushOut(player.MoveDirection, ref player.Pos, in boxes[i].Pos); });
                     break;
                 }
 
@@ -259,9 +268,8 @@ namespace Sokoban
                         continue;
                     }
 
-                    OnCollision(player.MoveDirection, ref boxes[player.PushedBoxIndex].Pos, walls[wallId].Pos);
-                    OnCollision(player.MoveDirection, ref player.Pos, boxes[player.PushedBoxIndex].Pos);
-
+                    OnCollision(() => { PushOut(player.MoveDirection, ref boxes[player.PushedBoxIndex].Pos, in walls[wallId].Pos); });
+                    OnCollision(() => { PushOut(player.MoveDirection, ref player.Pos, in boxes[player.PushedBoxIndex].Pos); });
                     break;
                 }
 
@@ -279,17 +287,13 @@ namespace Sokoban
                         continue;
                     }
 
-                    OnCollision(player.MoveDirection, ref boxes[player.PushedBoxIndex].Pos, in boxes[collidedBoxId].Pos);
-                    OnCollision(player.MoveDirection, ref player.Pos, in boxes[player.PushedBoxIndex].Pos);
+                    OnCollision(() => { PushOut(player.MoveDirection, ref boxes[player.PushedBoxIndex].Pos, in boxes[collidedBoxId].Pos); });
+                    OnCollision(() => { PushOut(player.MoveDirection, ref player.Pos, in boxes[player.PushedBoxIndex].Pos); });
                     break;
                 }
 
-                //tp.Update(ref player, in boxes, in walls);
-                tp2.Update(ref player, in boxes, in walls);
-
+                tp.Update(ref player, in boxes, in walls);
             }
-            
-           
 
             // 플레이어를 이동시킨다.
             void MovePlayer(ConsoleKey key, ref Player player)
@@ -315,24 +319,51 @@ namespace Sokoban
                 }
             }
 
-            void OnCollision(Direction playerMoveDirection, ref Vector2 objPos, in Vector2 collidedObjPos)
+
+            void PushOut(Direction dir, ref Vector2 objPos, in Vector2 collidedObj)
             {
-                switch(playerMoveDirection)
+                switch (dir)
                 {
                     case Direction.Left:
-                        MoveToRightOfTarget(out objPos, in collidedObjPos);
+                        MoveToRightOfTarget(out objPos, in collidedObj);
                         break;
                     case Direction.Right:
-                        MoveToLeftOfTarget(out objPos, in collidedObjPos);
+                        MoveToLeftOfTarget(out objPos, in collidedObj);
                         break;
                     case Direction.Up:
-                        MoveToDownOfTarget(out objPos, in collidedObjPos);
+                        MoveToDownOfTarget(out objPos, in collidedObj);
                         break;
                     case Direction.Down:
-                        MoveToUpOfTarget(out objPos, in collidedObjPos);
+                        MoveToUpOfTarget(out objPos, in collidedObj);
                         break;
                 }
             }
+
+            void MoveBox(Direction dir, ref Vector2 boxPos, in Vector2 PlayerPos)
+            {
+                switch (dir)
+                {
+                    case Direction.Left:
+                        MoveToLeftOfTarget(out boxPos, in PlayerPos);
+                        break;
+                    case Direction.Right:
+                        MoveToRightOfTarget(out boxPos, in PlayerPos);
+                        break;
+                    case Direction.Up:
+                        MoveToUpOfTarget(out boxPos, in PlayerPos);
+                        break;
+                    case Direction.Down:
+                        MoveToDownOfTarget(out boxPos, in PlayerPos);
+                        break;
+                }
+            }
+
+            void OnCollision(Action action)
+            {
+                action();
+            }
+          
+
 
             int CountBoxOnGoal(in Box[] boxes, in Goal[] goals, ref bool[] isBoxOnGoal)
             {
