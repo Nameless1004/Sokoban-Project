@@ -23,5 +23,7 @@ namespace Sokoban
         // Recorder Setting
         public const int RECORD_COUNT = 15;
         public const int REWIND_INTERVAL = 100;
+
+        public static Random random = new Random();
     }
 }

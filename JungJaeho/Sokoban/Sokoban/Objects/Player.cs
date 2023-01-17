@@ -6,46 +6,24 @@ using System.Threading.Tasks;
 
 namespace Sokoban
 {
-    struct Player
+    class Player
     {
         public Player(Vector2 pos, int pushedBoxId, ConsoleColor color)
         {
             Pos = pos;
-            PushedBoxIndex = pushedBoxId;
-            MoveDirection = Direction.None;
-            Color = color;
+            _moveDirection = Direction.None;
+            _pushedBoxIndex = 0;
+            _color = color;
         }
 
-        public Vector2 Pos;
-        public int PushedBoxIndex;
-        public Direction MoveDirection;
-        public ConsoleColor Color;
+        public  Vector2         Pos;
+
+        private int             _pushedBoxIndex;
+        private Direction       _moveDirection;
+        private ConsoleColor    _color;
+
+        public int          PushedBoxIndex { get { return _pushedBoxIndex; } set { _pushedBoxIndex = value; } }
+        public Direction    MoveDirection { get { return _moveDirection; } set { _moveDirection = value; } }
+        public ConsoleColor Color { get { return _color; } set { _color = value; } }
     }
-
-    //    class Player : GameObject
-    //    {
-    //        public Player(int x, int y)
-    //        {
-    //            _x = x;
-    //            _y = y;
-    //            _moveDirection = Direction.None;
-    //            _pushedBoxIndex = 0;
-    //        }
-    //        private Direction _moveDirection;
-    //        private int _pushedBoxIndex;
-
-    //        public Vector2 Pos { get { return _pos; } set { _pos = value; } }
-    //        public int Y { get { return _y; } set { _y = value; } }
-    //        public Direction MoveDirection { get { return _moveDirection; } set { _moveDirection = value; } }
-    //        public int PushedBoxIndex { get { return _pushedBoxIndex; } set { _pushedBoxIndex = value; } }
-    //        //int GetX() => _x;
-    //        //int SetX(int data) => _x = data;
-    //        //int GetY() => _y;
-    //        //int SetY(int data) => _y = data;
-    //        //Direction GetDirection() => _moveDirection;
-    //        //void SetDirection(Direction dir) => _moveDirection = dir;
-    //        //int GetPushedBoxId() => _pushedBoxIndex;
-    //        //void SetPushedBoxId(int data) => _pushedBoxIndex = data;
-    //    }
-    //}
 }

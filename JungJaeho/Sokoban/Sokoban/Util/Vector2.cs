@@ -11,6 +11,21 @@ namespace Sokoban
         public Vector2(int x, int y) { X = x; Y = y; }
         public int X;
         public int Y;
+
+        //public Vector2 Normalizing()
+        //{
+        //    int size = (int)Math.Sqrt((X * X) + (Y * Y));
+        //    Vector2 NormalizedVec = new Vector2();
+        //    NormalizedVec.X = X / size;
+        //    NormalizedVec.Y = Y / size;
+        //    return NormalizedVec;
+        //}
+
+        static public int Distance(Vector2 start, Vector2 dest)
+        {
+            int dist = 5;
+            return dist;
+        }
    
         #region Operator Overloading
         public static Vector2 operator +(Vector2 x1, Vector2 x2)

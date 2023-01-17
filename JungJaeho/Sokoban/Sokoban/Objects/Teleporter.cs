@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.SymbolStore;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Sokoban;
 namespace Sokoban
 {
-    struct Teleporter
+    class Teleporter
     {
         public Teleporter(Vector2 p1, Vector2 p2, string icon, ConsoleColor color)
         {
@@ -23,245 +25,160 @@ namespace Sokoban
         public string Icon;
         public ConsoleColor Color;
 
-        public void Update(ref Player player, in Box[] boxes, in Wall[] walls)
+        public void Update(Player player, in Box[] boxes, in Wall[] walls)
         {
-            TeleportPlayer(ref player);
-            TeleportBox(ref player, ref boxes[player.PushedBoxIndex], in boxes, in walls);
+            TeleportPlayer(player);
+            TeleportBox(player, boxes[player.PushedBoxIndex], in boxes, in walls);
         }
         
-        private void TeleportPlayer(ref Player player)
+        private void TeleportPlayer(Player player)
         {
-            if (player.Pos.X == Pos1.X && player.Pos.Y == Pos1.Y)
+            if (IsCollided(player.Pos, Pos1))
             {
-                player.Pos.X = Pos2.X;
-                player.Pos.Y = Pos2.Y;
+                OnCollision(() => { MoveToDest(out player.Pos, in Pos2); });
             }
-            else if (player.Pos.X == Pos2.X && player.Pos.Y == Pos2.Y)
+            else if (IsCollided(player.Pos, Pos2))
             {
-                player.Pos.X = Pos1.X;
-                player.Pos.Y = Pos1.Y;
+                OnCollision(() => { MoveToDest(out player.Pos, in Pos1); });
             }
         }
 
-        private void TeleportBox(ref Player player, ref Box pushedBox, in Box[] boxes, in Wall[] walls)
+        private void MoveToDest(out Vector2 start, in Vector2 dest)
         {
-            // 박스 텔포
-            if (pushedBox.Pos == Pos1)
-            {
-                Vector2 prevBoxPos = pushedBox.Pos;
-
-                if (false == IsTeleportable(Pos2, player.MoveDirection, boxes, walls))
-                {
-                    switch (player.MoveDirection)
-                    {
-                        case Direction.Left:
-                            pushedBox.Pos.X = prevBoxPos.X + 1;
-                            pushedBox.Pos.Y = prevBoxPos.Y;
-                            player.Pos.X = player.Pos.X + 1;
-                            break;
-
-                        case Direction.Right:
-                            pushedBox.Pos.X = prevBoxPos.X - 1;
-                            pushedBox.Pos.Y = prevBoxPos.Y;
-                            player.Pos.X = player.Pos.X - 1;
-                            break;
-
-                        case Direction.Up:
-                            pushedBox.Pos.X = prevBoxPos.X;
-                            pushedBox.Pos.Y = prevBoxPos.Y + 1;
-                            player.Pos.Y = player.Pos.Y + 1;
-                            break;
-
-                        case Direction.Down:
-                            pushedBox.Pos.X = prevBoxPos.X;
-                            pushedBox.Pos.Y = prevBoxPos.Y - 1;
-                            player.Pos.Y = player.Pos.Y - 1;
-                            break;
-                    }
-                }
-                else
-                {
-                    switch (player.MoveDirection)
-                    {
-                        case Direction.Left:
-                            pushedBox.Pos.X = Pos2.X - 1;
-                            pushedBox.Pos.Y = Pos2.Y;
-                            break;
-
-                        case Direction.Right:
-                            pushedBox.Pos.X = Pos2.X + 1;
-                            pushedBox.Pos.Y = Pos2.Y;
-                            break;
-
-                        case Direction.Up:
-                            pushedBox.Pos.X = Pos2.X;
-                            pushedBox.Pos.Y = Pos2.Y - 1;
-                            break;
-
-                        case Direction.Down:
-                            pushedBox.Pos.X = Pos2.X;
-                            pushedBox.Pos.Y = Pos2.Y + 1;
-                            break;
-                    }
-                }
-            }
-            else if (pushedBox.Pos == Pos2)
-            {
-                Vector2 prevBoxPos = pushedBox.Pos;
-
-
-                if (false == IsTeleportable(Pos1, player.MoveDirection, in boxes,in walls))
-                {
-                    switch (player.MoveDirection)
-                    {
-                        case Direction.Left:
-                            pushedBox.Pos.X = prevBoxPos.X + 1;
-                            pushedBox.Pos.Y = prevBoxPos.Y;
-                            player.Pos.X = player.Pos.X + 1;
-                            break;
-
-                        case Direction.Right:
-                            pushedBox.Pos.X = prevBoxPos.X - 1;
-                            pushedBox.Pos.Y = prevBoxPos.Y;
-                            player.Pos.X = player.Pos.X - 1;
-                            break;
-
-                        case Direction.Up:
-                            pushedBox.Pos.X = prevBoxPos.X;
-                            pushedBox.Pos.Y = prevBoxPos.Y + 1;
-                            player.Pos.Y = player.Pos.Y + 1;
-                            break;
-
-                        case Direction.Down:
-                            pushedBox.Pos.X = prevBoxPos.X;
-                            pushedBox.Pos.Y = prevBoxPos.Y - 1;
-                            player.Pos.Y = player.Pos.Y - 1;
-                            break;
-                    }
-                }
-                else
-                {
-                    switch (player.MoveDirection)
-                    {
-                        case Direction.Left:
-                            pushedBox.Pos.X = Pos1.X - 1;
-                            pushedBox.Pos.Y = Pos1.Y;
-                            break;
-
-                        case Direction.Right:
-                            pushedBox.Pos.X = Pos1.X + 1;
-                            pushedBox.Pos.Y = Pos1.Y;
-                            break;
-
-                        case Direction.Up:
-                            pushedBox.Pos.X = Pos1.X;
-                            pushedBox.Pos.Y = Pos1.Y - 1;
-                            player.Pos.Y = player.Pos.Y + 1;
-                            break;
-
-                        case Direction.Down:
-                            pushedBox.Pos.X = Pos1.X;
-                            pushedBox.Pos.Y = Pos1.Y + 1;
-                            player.Pos.Y = player.Pos.Y - 1;
-                            break;
-                    }
-                }
-
-            }
-
+            start = dest;
         }
 
-        private bool IsTeleportable(in Vector2 Pos, Direction moveDirection, in Box[] boxes, in Wall[] walls)
+        private void OnCollision(Action action)
+        {
+            action();
+        }
+
+        private bool IsCollided(in Vector2 obj, in Vector2 comp)
+        {
+            return obj == comp;
+        }
+
+
+        void MoveToLeftOfTarget(out Vector2 pos, in Vector2 target) => pos = new Vector2(Math.Max(Game.MIN_X + Game.OFFSET_X, target.X - 1), target.Y);
+        void MoveToRightOfTarget(out Vector2 pos, in Vector2 target) => pos = new Vector2(Math.Min(target.X + 1, Game.MAX_X - Game.OFFSET_X), target.Y);
+        void MoveToUpOfTarget(out Vector2 pos, in Vector2 target) => pos = new Vector2(target.X, Math.Max(Game.MIN_Y + Game.OFFSET_Y, target.Y - 1));
+        void MoveToDownOfTarget(out Vector2 pos, in Vector2 target) => pos = new Vector2(target.X, Math.Min(target.Y + 1, Game.MAX_Y - Game.OFFSET_Y));
+
+        void MoveToTarget(Direction dir, ref Vector2 obj, in Vector2 targetPos)
+        {
+            switch (dir)
+            {
+                case Direction.Left:
+                    MoveToLeftOfTarget(out obj, in targetPos);
+                    break;
+                case Direction.Right:
+                    MoveToRightOfTarget(out obj,in targetPos);
+                    break;
+                case Direction.Up:
+                    MoveToUpOfTarget(out obj, in targetPos);
+                    break;
+                case Direction.Down:
+                    MoveToDownOfTarget(out obj, in targetPos);
+                    break;
+            }
+        }
+
+        void PushOut(Direction dir, ref Vector2 obj, in Vector2 targetPos)
+        {
+            switch (dir)
+            {
+                case Direction.Left:
+                    MoveToRightOfTarget(out obj, targetPos);
+                    break;
+                case Direction.Right:
+                    MoveToLeftOfTarget(out obj, targetPos);
+                    break;
+                case Direction.Up:
+                    MoveToDownOfTarget(out obj, targetPos);
+                    break;
+                case Direction.Down:
+                    MoveToUpOfTarget(out obj, targetPos);
+                    break;
+            }
+        }
+
+        private void TeleportBox(Player player, Box pushedBox, in Box[] boxes, in Wall[] walls)
+        {
+            if (IsCollided(in pushedBox.Pos, in Pos1))
+            {
+                if (IsTeleportable(player.MoveDirection, Pos2, boxes, walls))
+                {
+                    OnCollision(() => { MoveToTarget(player.MoveDirection, ref pushedBox.Pos, in Pos2); });
+                }
+                else
+                {
+                    OnCollision(() => PushOut(player.MoveDirection, ref pushedBox.Pos, Pos1));
+                    OnCollision(() => PushOut(player.MoveDirection, ref player.Pos, pushedBox.Pos));
+                }
+            }
+            else if(IsCollided(in pushedBox.Pos, in Pos2))
+            {
+                if (IsTeleportable(player.MoveDirection, Pos1, boxes, walls))
+                {
+                    OnCollision(() => { MoveToTarget(player.MoveDirection, ref pushedBox.Pos, in Pos1); });
+                }
+                else
+                {
+                    OnCollision(() => PushOut(player.MoveDirection, ref pushedBox.Pos, Pos1));
+                    OnCollision(() => PushOut(player.MoveDirection, ref player.Pos, pushedBox.Pos));
+                }
+            }
+        }
+
+        private bool IsTeleportable(Direction moveDirection, in Vector2 Pos, in Box[] boxes, in Wall[] walls)
         {
             Vector2 right =  new Vector2(Pos.X + 1, Pos.Y);
             Vector2 left =   new Vector2(Pos.X - 1, Pos.Y);
             Vector2 top =    new Vector2(Pos.X, Pos.Y - 1);
             Vector2 bottom = new Vector2(Pos.X, Pos.Y + 1);
 
+            bool result = false;
             switch (moveDirection)
             {
                 case Direction.Left:
-                    if(left.X < Game.MIN_X + Game.OFFSET_X)
-                    {
-                        return false;
-                    }
-                    for (int i = 0; i < boxes.Length; ++i)
-                    {
-                        if (boxes[i].Pos == left)
-                        {
-                            return false;
-                        }
-                    }
-                    for (int i = 0; i < walls.Length; ++i)
-                    {
-                        if (walls[i].Pos == left)
-                        {
-                            return false;
-                        }
-                    }
+                    result = IsDestPositionCanMove(left, in boxes, in walls);
                     break;
                 case Direction.Right:
-                    if(Game.MAX_X - Game.OFFSET_X < right.X)
-                    {
-                        return false;
-                    }
-                    for (int i = 0; i < boxes.Length; ++i)
-                    {
-                        if (boxes[i].Pos == right)
-                        {
-                            return false;
-                        }
-                    }
-                    for (int i = 0; i < walls.Length; ++i)
-                    {
-                        if (walls[i].Pos == right)
-                        {
-                            return false;
-                        }
-                    }
+                    result = IsDestPositionCanMove(right, in boxes, in walls);
                     break;
                 case Direction.Up:
-                    if(top.Y < Game.MIN_Y + Game.OFFSET_Y)
-                    {
-                        return false;
-                    }
-
-                    for (int i = 0; i < boxes.Length; ++i)
-                    {
-                        if (boxes[i].Pos == top)
-                        {
-                            return false;
-                        }
-                    }
-                    for (int i = 0; i < walls.Length; ++i)
-                    {
-                        if (walls[i].Pos == top)
-                        {
-                            return false;
-                        }
-                    }
+                    result = IsDestPositionCanMove(top, in boxes, in walls);
                     break;
                 case Direction.Down:
-                    if(Game.MAX_Y - Game.OFFSET_Y < bottom.Y)
-                    {
-                        return false;
-                    }
-                    for (int i = 0; i < boxes.Length; ++i)
-                    {
-                        if (boxes[i].Pos == bottom)
-                        {
-                            return false;
-                        }
-                    }
-                    for (int i = 0; i < walls.Length; ++i)
-                    {
-                        if (walls[i].Pos == bottom)
-                        {
-                            return false;
-                        }
-                    }
+                    result = IsDestPositionCanMove(bottom, in boxes, in walls);
                     break;
             }
+
+            return result;
+        }
+
+        private bool IsDestPositionCanMove(Vector2 there, in Box[] boxes, in Wall[] walls) 
+        {
+            if (there.X < Game.MIN_X + Game.OFFSET_X || there.X > Game.MAX_X - Game.OFFSET_X 
+                || there.Y < Game.MIN_Y + Game.OFFSET_Y || there.Y > Game.MAX_Y - Game.OFFSET_Y)
+            {
+                return false;
+            }
+            for (int i = 0; i < boxes.Length; ++i)
+            {
+                if (boxes[i].Pos == there)
+                {
+                    return false;
+                }
+            }
+            for (int i = 0; i < walls.Length; ++i)
+            {
+                if (walls[i].Pos == there)
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
         

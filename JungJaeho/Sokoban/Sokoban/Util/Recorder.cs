@@ -33,22 +33,22 @@ namespace Sokoban
         {
             _recordCount = recordCount;
             _playerMoveHistory = new PlayerInfo[_recordCount];
-            _boxesMoveHistory  = new BoxInfo[_recordCount, Game.BOX_COUNT];
+            _boxesMoveHistory = new BoxInfo[_recordCount, Game.BOX_COUNT];
             _isRewinding = false;
             _rewindInterval = rewindInterval;
         }
 
-        private int             _recordCount;
-        private int             _index;
-        private bool            _isRewinding;
-        private int             _rewindInterval;
-        private PlayerInfo[]    _playerMoveHistory;
-        private BoxInfo[,]      _boxesMoveHistory;
+        private int _recordCount;
+        private int _index;
+        private bool _isRewinding;
+        private int _rewindInterval;
+        private PlayerInfo[] _playerMoveHistory;
+        private BoxInfo[,] _boxesMoveHistory;
 
         #region Properties
-        public int      Index { get { return _index; } }
-        public bool     IsRewinding { get { return _isRewinding; } set { _isRewinding = value; } }
-        public int      RewindInterval { get { return _rewindInterval; } }
+        public int Index { get { return _index; } }
+        public bool IsRewinding { get { return _isRewinding; } set { _isRewinding = value; } }
+        public int RewindInterval { get { return _rewindInterval; } }
         #endregion
 
         public bool StartRewinding()
@@ -58,11 +58,11 @@ namespace Sokoban
             return true;
         }
 
-        public void Update(ref Player player, ref Box[] boxes)
+        public void Update(Player player, Box[] boxes)
         {
             if (_isRewinding == false) return;
 
-            Rewind(ref player, ref boxes);
+            Rewind(player, boxes);
             Thread.Sleep(_rewindInterval);
         }
 
@@ -72,19 +72,19 @@ namespace Sokoban
         /// <param name="player">플레이어</param>
         /// <param name="boxes">박스들</param>
         /// <returns></returns>
-        public void Rewind(ref Player player, ref Box[] boxes)
+        public void Rewind(Player player, Box[] boxes)
         {
             if (_index <= 0)
             {
                 IsRewinding = false;
                 return;
             }
-            RecoveryPlayer(ref player, _index - 1);
-            RecoveryBoxes(ref boxes, _index - 1);
+            RecoveryPlayer(player, _index - 1);
+            RecoveryBoxes(boxes, _index - 1);
             --_index;
         }
 
-        
+
         /// <summary>
         /// 플레이어와 박스의 위치를 기록해주는 함수입니다.
         /// </summary>
@@ -95,14 +95,14 @@ namespace Sokoban
             if (_index < _recordCount)
             {
                 RecordPlayerMove(player, _index);
-                RecordBoxesMove(ref boxes, _index);
+                RecordBoxesMove(in boxes, _index);
                 _index++;
             }
             else
             {
                 MoveForwardElements();
                 RecordPlayerMove(player, _index - 1);
-                RecordBoxesMove(ref boxes, _index - 1);
+                RecordBoxesMove(in boxes, _index - 1);
             }
         }
 
@@ -123,9 +123,9 @@ namespace Sokoban
         /// </summary>
         /// <param name="boxes">박스담은 배열</param>
         /// <param name="index">기록할 인덱스</param>
-        private void RecordBoxesMove(ref Box[] boxes, int index)
+        private void RecordBoxesMove(in Box[] boxes, int index)
         {
-            for(int i = 0; i < Game.BOX_COUNT; ++i)
+            for (int i = 0; i < Game.BOX_COUNT; ++i)
             {
                 BoxInfo b = ExtractBoxInfo(in boxes[i]);
                 _boxesMoveHistory[index, i] = b;
@@ -147,7 +147,7 @@ namespace Sokoban
                 // Box
                 for (int boxIndex = 0; boxIndex < Game.BOX_COUNT; ++boxIndex)
                 {
-                    BoxInfo temp2 = _boxesMoveHistory[i,boxIndex];
+                    BoxInfo temp2 = _boxesMoveHistory[i, boxIndex];
                     _boxesMoveHistory[i, boxIndex] = _boxesMoveHistory[i + 1, boxIndex];
                     _boxesMoveHistory[i + 1, boxIndex] = temp2;
                 }
@@ -189,7 +189,7 @@ namespace Sokoban
         /// </summary>
         /// <param name="player">플레이어 객체</param>
         /// <param name="historyIndex">옮길 시점</param>
-        private void RecoveryPlayer(ref Player player, int historyIndex)
+        private void RecoveryPlayer(Player player, int historyIndex)
         {
             PlayerInfo playerInfo = _playerMoveHistory[historyIndex];
 
@@ -205,7 +205,7 @@ namespace Sokoban
         /// <param name="box">박스</param>
         /// <param name="historyIndex">복구 시점</param>
         /// <param name="boxIndex">박스 번호</param>
-        private void RecoveryBox(out Box box, int historyIndex, int boxIndex)
+        private void RecoveryBox(Box box, int historyIndex, int boxIndex)
         {
             BoxInfo boxInfo = _boxesMoveHistory[historyIndex, boxIndex];
 
@@ -219,11 +219,11 @@ namespace Sokoban
         /// </summary>
         /// <param name="boxes">박스들을 담은 배열</param>
         /// <param name="historyIndex">복구 시점</param>
-        private void RecoveryBoxes(ref Box[] boxes, int historyIndex)
+        private void RecoveryBoxes(Box[] boxes, int historyIndex)
         {
-            for(int boxIndex = 0; boxIndex < Game.BOX_COUNT; ++boxIndex)
+            for (int boxIndex = 0; boxIndex < Game.BOX_COUNT; ++boxIndex)
             {
-                RecoveryBox(out boxes[boxIndex], historyIndex, boxIndex);
+                RecoveryBox(boxes[boxIndex], historyIndex, boxIndex);
             }
         }
         /// <summary>
@@ -231,8 +231,6 @@ namespace Sokoban
         /// </summary>
         public void TrackingPlayer(Renderer renderer, string playerIcon)
         {
-            ConsoleColor prev = Console.ForegroundColor;
-           
             for (int i = 0; i < _index; ++i)
             {
                 //ConsoleColor color = (ConsoleColor)(1+i%14);

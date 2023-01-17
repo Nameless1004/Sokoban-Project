@@ -73,6 +73,7 @@ namespace Sokoban
                 new Goal(new Vector2(12, 8), ConsoleColor.Yellow)
             };
 
+            var s = Vector2.Distance(player.Pos, goals[0].Pos);
 
             ConsoleKey key = ConsoleKey.NoName;
             // 게임 루프 구성
@@ -101,7 +102,7 @@ namespace Sokoban
                     }
                 }
 
-                recorder.Update(ref player, ref boxes);
+                recorder.Update(player, boxes);
 
                 if (recorder.IsRewinding == true)
                     continue;
@@ -152,8 +153,7 @@ namespace Sokoban
                     {
                         if (i == Game.MIN_X || i == Game.MAX_X || j == Game.MIN_Y || j == Game.MAX_Y)
                         {
-                            Random rand = new Random();
-                            ConsoleColor col = recorder.IsRewinding ? (ConsoleColor)rand.Next(1, 15) : ConsoleColor.Red;
+                            ConsoleColor col = recorder.IsRewinding ? (ConsoleColor)Game.random.Next(1, 15) : ConsoleColor.Red;
                             renderer.Render(new Vector2(i, j), "∏", col);
                             renderer.Render(new Vector2(i, j), "∏", col);
                         }
@@ -208,7 +208,7 @@ namespace Sokoban
                 renderer.Render(new Vector2(Game.MAX_X + 2, Game.MIN_Y + 4), "   플레이어 좌표     ", ConsoleColor.White);
                 renderer.Render(new Vector2(Game.MAX_X + 2, Game.MIN_Y + 5), $"    X : {player.Pos.X - (Game.MIN_X + Game.OFFSET_X)} Y : {player.Pos.Y - (Game.MIN_Y + Game.OFFSET_Y)}  ", ConsoleColor.White);
                 renderer.Render(new Vector2(Game.MAX_X + 2, Game.MIN_Y + 6), "-------------------", ConsoleColor.White);
-
+                Thread.Sleep(1);
             }
 
             void Update(ConsoleKey key)
@@ -223,7 +223,9 @@ namespace Sokoban
                         continue;
                     }
 
-                    OnCollision(() => { PushOut(player.MoveDirection, ref player.Pos, in walls[wallId].Pos); });
+                    OnCollision(() => { 
+                        PushOut(player.MoveDirection, ref player.Pos, in walls[wallId].Pos); 
+                    });
                     break;
                 }
 
@@ -236,27 +238,13 @@ namespace Sokoban
                         continue;
                     }
 
-                    switch (player.MoveDirection)
-                    {
-                        case Direction.Left:
-                            MoveToLeftOfTarget(out boxes[i].Pos, in player.Pos);
-                            break;
-                        case Direction.Right:
-                            MoveToRightOfTarget(out boxes[i].Pos, in player.Pos);
-                            break;
-                        case Direction.Up:
-                            MoveToUpOfTarget(out boxes[i].Pos, in player.Pos);
-                            break;
-                        case Direction.Down:
-                            MoveToDownOfTarget(out boxes[i].Pos, in player.Pos);
-                            break;
-                        default:
-                            ExitWithError($"[Error] 플레이어 방향  : {player.MoveDirection}");
-                            break;
-                    }
+                    MoveBox(player.MoveDirection, ref boxes[i].Pos, in player.Pos);
                     player.PushedBoxIndex = i;
 
-                    OnCollision(() => { PushOut(player.MoveDirection, ref player.Pos, in boxes[i].Pos); });
+                    OnCollision(() => 
+                    { 
+                        PushOut(player.MoveDirection, ref player.Pos, in boxes[i].Pos); 
+                    });
                     break;
                 }
 
@@ -268,8 +256,16 @@ namespace Sokoban
                         continue;
                     }
 
-                    OnCollision(() => { PushOut(player.MoveDirection, ref boxes[player.PushedBoxIndex].Pos, in walls[wallId].Pos); });
-                    OnCollision(() => { PushOut(player.MoveDirection, ref player.Pos, in boxes[player.PushedBoxIndex].Pos); });
+                    OnCollision(() => 
+                    { 
+                        PushOut(player.MoveDirection, ref boxes[player.PushedBoxIndex].Pos, in walls[wallId].Pos); 
+                    });
+
+                    OnCollision(() => 
+                    { 
+                        PushOut(player.MoveDirection, ref player.Pos, in boxes[player.PushedBoxIndex].Pos); 
+                    });
+
                     break;
                 }
 
@@ -287,12 +283,19 @@ namespace Sokoban
                         continue;
                     }
 
-                    OnCollision(() => { PushOut(player.MoveDirection, ref boxes[player.PushedBoxIndex].Pos, in boxes[collidedBoxId].Pos); });
-                    OnCollision(() => { PushOut(player.MoveDirection, ref player.Pos, in boxes[player.PushedBoxIndex].Pos); });
+                    OnCollision(() => 
+                    { 
+                        PushOut(player.MoveDirection, ref boxes[player.PushedBoxIndex].Pos, in boxes[collidedBoxId].Pos); 
+                    });
+
+                    OnCollision(() => 
+                    { 
+                        PushOut(player.MoveDirection, ref player.Pos, in boxes[player.PushedBoxIndex].Pos); 
+                    });
                     break;
                 }
 
-                tp.Update(ref player, in boxes, in walls);
+                tp.Update(player, in boxes, in walls);
             }
 
             // 플레이어를 이동시킨다.
@@ -363,8 +366,6 @@ namespace Sokoban
                 action();
             }
           
-
-
             int CountBoxOnGoal(in Box[] boxes, in Goal[] goals, ref bool[] isBoxOnGoal)
             {
                 int boxCount = boxes.Length;

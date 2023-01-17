@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace Sokoban
 {
-    struct Goal
+    class Goal
     {
         public Goal(Vector2 pos, ConsoleColor color)
         {
             Pos = pos;
             Color = color;
         }
-        public Vector2 Pos;
+        public Vector2      Pos;
         public ConsoleColor Color;
     }
 
