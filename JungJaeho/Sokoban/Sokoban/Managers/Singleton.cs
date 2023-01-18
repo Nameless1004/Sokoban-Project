@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Sokoban
 {
-    internal class Singleton<T>
+    public class Singleton<T>
     {
         public static readonly Lazy<T> _instance = new Lazy<T>();
-        public static T GetInstance() => _instance.Value;
+        public static T Instance { get { return _instance.Value; } }
     }
 }

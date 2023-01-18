@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Sokoban
 {
-    class Wall
+    public class Wall
     {
         public Wall(Vector2 pos, ConsoleColor color)
         {

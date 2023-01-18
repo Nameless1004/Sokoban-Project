@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Sokoban
 {
-    internal class SoundManager : Singleton<SoundManager>
+    public class SoundManager : Singleton<SoundManager>
     {
         public SoundManager() 
         { 

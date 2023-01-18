@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Sokoban
 {
-    internal class Sound : FileStream
+    public class Sound : FileStream
     {
         public Sound(string path) : base(path, FileMode.Open, FileAccess.Read) 
         {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Sokoban
 {
-    class Goal
+    public class Goal
     {
         public Goal(Vector2 pos, ConsoleColor color)
         {
@@ -16,13 +16,4 @@ namespace Sokoban
         public Vector2      Pos;
         public ConsoleColor Color;
     }
-
-    //class Goal
-    //{
-    //    private int _x;
-    //    private int _y;
-
-    //    public int X { get { return _x; } set { _x = value; } }
-    //    public int Y { get { return _y; } }
-    //}
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Sokoban
 {
-    class Renderer
+    public class Renderer
     {
         public void Render(Vector2 position, string icon, ConsoleColor color = ConsoleColor.Black)
         {

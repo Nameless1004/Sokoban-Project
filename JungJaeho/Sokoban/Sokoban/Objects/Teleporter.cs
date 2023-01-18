@@ -35,6 +35,15 @@ namespace Sokoban
         {
             if (IsCollided(player.Pos, Pos1))
             {
+                int randomVal = RandomManager.Instance.GetRandomRangeInt(1, 2);
+                if(randomVal <= 1)
+                {
+                    Console.Clear();
+                    Console.WriteLine("죽음 ㅅㄱ");
+                    SoundManager.Instance.PlaySound("ending");
+                    Thread.Sleep(1000);
+                    Environment.Exit(1);      
+                }
                 OnCollision(() => { MoveToDest(out player.Pos, in Pos2); });
             }
             else if (IsCollided(player.Pos, Pos2))
@@ -57,7 +66,6 @@ namespace Sokoban
         {
             return obj == comp;
         }
-
 
         void MoveToLeftOfTarget(out Vector2 pos, in Vector2 target) => pos = new Vector2(Math.Max(Game.MIN_X + Game.OFFSET_X, target.X - 1), target.Y);
         void MoveToRightOfTarget(out Vector2 pos, in Vector2 target) => pos = new Vector2(Math.Min(target.X + 1, Game.MAX_X - Game.OFFSET_X), target.Y);

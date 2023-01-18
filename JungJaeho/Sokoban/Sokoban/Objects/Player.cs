@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Sokoban
 {
-    class Player
+    public class Player
     {
         public Player(Vector2 pos, int pushedBoxId, ConsoleColor color)
         {

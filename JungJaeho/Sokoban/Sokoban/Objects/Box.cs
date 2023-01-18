@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 
 namespace Sokoban
 {
-    class Box
+    public class Box
     {
         public Box(Vector2 pos, ConsoleColor color)
         {
             Pos = pos;
-            IsOnGoal= false;
+            IsOnGoal = false;
             Color = color;
         }
-        public Vector2      Pos;
-        public bool         IsOnGoal;
+        public Vector2 Pos;
+        public bool IsOnGoal;
         public ConsoleColor Color;
 
         public void MoveToDirection(Direction dir)

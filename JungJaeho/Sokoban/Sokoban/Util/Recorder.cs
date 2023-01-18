@@ -8,7 +8,7 @@ using Sokoban;
 
 namespace Sokoban
 {
-    class Recorder
+    public class Recorder
     {
         struct PlayerInfo
         {
